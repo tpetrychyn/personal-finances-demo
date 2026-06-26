@@ -1,0 +1,943 @@
+<title>Household Cashflow & Funding Plan</title>
+<style>
+  :root{
+    --bg:#0e1014; --card:#171a21; --card2:#1d212a; --line:#262b36;
+    --txt:#e7eaf0; --muted:#8b92a3; --faint:#5c6373;
+    --green:#4ade80; --blue:#60a5fa; --indigo:#818cf8; --violet:#a78bfa;
+    --pink:#f472b6; --sky:#38bdf8; --amber:#fbbf24; --orange:#fb923c; --red:#f87171;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 22px 80px}
+  h1{font-size:24px;font-weight:650;margin:0 0 4px;letter-spacing:-.01em}
+  h2{font-size:17px;font-weight:600;margin:0 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;margin:0}
+  header .sub{margin-bottom:22px}
+  .stats{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 26px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 18px;min-width:150px;flex:1}
+  .stat .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .stat .v{font-size:22px;font-weight:650;margin-top:3px;letter-spacing:-.01em}
+  .stat .v.sm{font-size:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px 24px;margin-bottom:24px}
+  .cardhead{display:flex;justify-content:space-between;align-items:flex-start;
+    flex-wrap:wrap;gap:14px;margin-bottom:8px}
+  .note{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--amber);
+    border-radius:8px;padding:12px 15px;font-size:13px;color:var(--muted);margin:14px 0 0}
+  .note b{color:var(--txt)}
+  svg{width:100%;height:auto;display:block}
+  .sankey text{fill:var(--txt);font-size:12.5px}
+  .sankey text.val{fill:var(--muted)}
+  .sankey rect{rx:2}
+  /* controls */
+  .controls{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin:6px 0 22px}
+  .presets{display:flex;gap:8px}
+  .btn{background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:.12s}
+  .btn:hover{color:var(--txt);border-color:var(--faint)}
+  .btn.active{background:var(--blue);border-color:var(--blue);color:#08111f;font-weight:600}
+  .inputs{display:flex;flex-wrap:wrap;gap:10px 16px}
+  .inp{display:flex;flex-direction:column;gap:3px}
+  .inp label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .inp input{background:#10131a;border:1px solid var(--line);color:var(--txt);
+    border-radius:7px;padding:6px 9px;width:96px;font:inherit;font-size:13px}
+  .inp input:disabled{opacity:.4}
+  .inp input:focus{outline:none;border-color:var(--blue)}
+  .ctl-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .reset{margin-top:9px;background:none;border:none;color:var(--faint);font-size:11.5px;cursor:pointer;padding:0}
+  .reset:hover{color:var(--red)}
+  .savehint{font-size:11px;color:var(--faint);margin-left:6px}
+  .cascade{flex-basis:100%}
+  .cascrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:5px;background:#10131a;border:1px solid var(--line);
+    border-radius:7px;padding:5px 9px;font-size:12px;color:var(--txt)}
+  .cascrow .arr{color:var(--faint);font-size:12px}
+  .inp em{color:var(--green);font-style:normal;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+  .inrow{display:flex;align-items:center;gap:5px}
+  .inrow input{width:74px}
+  .inrow input.mo{width:52px}
+  .inrow .x{color:var(--faint);font-size:12px}
+  .inrow .hint{color:var(--faint);font-size:10.5px;white-space:nowrap;min-width:48px}
+  select{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;
+    padding:6px 9px;font:inherit;font-size:13px}
+  select:focus{outline:none;border-color:var(--blue)}
+  /* car dump scheduler */
+  .dumps{display:flex;flex-direction:column;gap:7px}
+  .dumprow{display:flex;align-items:center;gap:7px;font-size:13px}
+  .dumprow input{background:#10131a;border:1px solid var(--line);color:var(--txt);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  .dumprow .amt{width:96px}.dumprow .mo{width:58px}
+  .dumprow .hint{color:var(--faint);font-size:11px;min-width:64px}
+  .dumprow .cashtog{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer}
+  .dumprow .cashtog input{width:auto}
+  .dumprow .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+  .dumprow .del:hover{color:var(--red)}
+  .addbtn{align-self:flex-start;margin-top:2px;background:var(--card2);border:1px dashed var(--faint);
+    color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12.5px}
+  .addbtn:hover{color:var(--txt);border-color:var(--blue)}
+  /* assets / net worth */
+  .assets{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.assets{grid-template-columns:1fr}}
+  .asset-col{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+  .asset-col h3{margin:0 0 9px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+  .arow{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--muted)}
+  .arow span:last-child{color:var(--txt);font-variant-numeric:tabular-nums}
+  .asub{display:flex;justify-content:space-between;border-top:1px solid var(--line);
+    margin-top:7px;padding-top:7px;font-size:13.5px;font-weight:650}
+  .nwbar{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;
+    background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--green);
+    border-radius:11px;padding:13px 18px;margin-top:2px}
+  .nwbar .big{font-size:24px;font-weight:700;letter-spacing:-.01em}
+  .nwbar .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .nwbar .pc{font-size:12.5px;color:var(--muted)}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:4px}
+  .badge.ok{background:rgba(74,222,128,.15);color:var(--green)}
+  .badge.no{background:rgba(248,113,113,.15);color:var(--red)}
+  /* gantt */
+  .gantt{margin-top:8px;--gl:190px;--gr:150px}  /* left/right label-column widths, for gridline alignment */
+  .axis{display:grid;font-size:11px;color:var(--faint);margin:0 0 6px;
+    grid-template-columns:190px 1fr 150px}
+  .axis .months{position:relative;height:16px}
+  .axis .months span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+  .grow{position:relative}
+  .gridlines{position:absolute;left:var(--gl,0);right:var(--gr,0);top:0;bottom:0;pointer-events:none}
+  .gridlines i{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+  .gridlines i.q{background:#2f3543}
+  .deadline{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--pink);opacity:.7;pointer-events:none}
+  .deadline.tax{background:var(--amber)}
+  .row{display:grid;grid-template-columns:190px 1fr 150px;align-items:center;
+    gap:0;padding:5px 0;border-top:1px solid #1c2029}
+  .row:first-child{border-top:none}
+  .rl{display:flex;align-items:center;gap:8px;font-size:13.5px;padding-right:12px}
+  .rl small{color:var(--muted);font-weight:400}
+  .track{position:relative;height:26px}
+  .bar{position:absolute;top:3px;height:20px;border-radius:6px;display:flex;align-items:center;
+    padding:0 8px;font-size:11px;font-weight:600;color:#0c0f14;white-space:nowrap;overflow:hidden}
+  .bar.arrow::after{content:"›";position:absolute;right:3px;font-size:15px;opacity:.7}
+  .bar .amt{font-weight:650}
+  .bar .dt{opacity:.55;font-weight:400}
+  .bartip{position:fixed;z-index:80;pointer-events:none;display:none;white-space:nowrap;
+    background:#0b0d12;border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    font-size:12.5px;color:var(--txt);box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .bartip .h{color:var(--muted);font-size:11px;margin-bottom:2px}
+  .bartip b{font-variant-numeric:tabular-nums}
+  .bartip .sub2{color:var(--faint);font-size:11px}
+  .bar.draggable{cursor:grab}
+  .bar.draggable:hover{filter:brightness(1.08)}
+  .rz{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize;
+    border-radius:0 6px 6px 0;background:rgba(0,0,0,.18)}
+  .rz:hover{background:rgba(255,255,255,.35)}
+  .rr{font-size:12.5px;color:var(--muted);text-align:right;padding-left:10px}
+  .rr b{color:var(--txt)}
+  .legend2{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:14px}
+  .legend2 span{display:flex;align-items:center;gap:6px}
+  .legend2 i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  a{color:var(--blue)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Household Cashflow & Funding Plan</h1>
+    <p class="sub">Bob &amp; Sally · monthly basis · as of June 2026</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Monthly income</div><div class="v">$8,500</div></div>
+    <div class="stat"><div class="k">Living + car pmt</div><div class="v">$5,410</div></div>
+    <div class="stat"><div class="k">Free to deploy / mo</div><div class="v" style="color:var(--green)">$3,090</div></div>
+    <div class="stat"><div class="k">FIRE target</div><div class="v sm">$1,250,000</div></div>
+    <div class="stat"><div class="k">Yrs to FIRE*</div><div class="v sm" id="fireYears">—</div></div>
+  </div>
+
+  <!-- ================= SANKEY ================= -->
+  <div class="card">
+    <div class="cardhead">
+      <div><h2>Where the money goes</h2>
+      <p class="sub">Two-tier flow: income sources → income pool → expenses + the savings bucket → funding goals (current month allocation).</p></div>
+    </div>
+    <div class="sankey"><svg id="sankey" viewBox="0 0 1300 780" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="note">
+      <b>How to read this:</b> the car payment ($189 biweekly ≈ <b>$410/mo</b>) is a real expense, leaving a deployable surplus of <b>$3,090/mo</b> to split across goals. The $18k car loan carries <b>7.0% interest</b> — bulk-payoff scheduling is in the car card below.
+    </div>
+  </div>
+
+  <!-- ================= GANTT ================= -->
+  <div class="card">
+    <div class="cardhead">
+      <div><h2>Funding goals & timelines</h2>
+      <p class="sub">Each bar shows when a goal is actively funded until it's fully paid. In <b>Custom</b> mode, <b>drag a lifestyle bar to move its start month</b>, or <b>drag its right edge to change the $/mo</b> (longer = smaller payments). Accounts (RRSP/TFSA) fill from whatever's left.</p></div>
+    </div>
+
+    <div class="controls">
+      <div>
+        <div class="ctl-lbl">Strategy</div>
+        <div class="presets">
+          <button class="btn" data-mode="parallel">Parallel</button>
+          <button class="btn" data-mode="waterfall">Waterfall</button>
+          <button class="btn active" data-mode="custom">Custom (phased)</button>
+        </div>
+        <button id="undoBtn" class="reset" title="Undo last goal change (⌘/Ctrl+Z)" disabled>↩ Undo</button>
+        <button id="resetBtn" class="reset" title="Clear saved settings and reload">↺ Reset to defaults</button>
+        <span class="savehint">· changes auto-save to this browser</span>
+      </div>
+      <div style="flex:1;min-width:280px">
+        <div class="ctl-lbl" id="inputsLabel">Monthly $ &amp; start month per lifestyle goal · accounts absorb the rest</div>
+        <div class="inputs" id="inputs"></div>
+      </div>
+    </div>
+
+    <div class="gantt">
+      <div class="axis">
+        <div></div>
+        <div class="months" id="axis"></div>
+        <div></div>
+      </div>
+      <div class="grow">
+        <div class="gridlines" id="gridlines"></div>
+        <div id="rows"></div>
+      </div>
+    </div>
+    <div id="barTip" class="bartip"></div>
+
+    <div class="legend2">
+      <span><i style="background:var(--green)"></i> Bob RRSP '26 deadline — Mar 2027 (2026 refund)</span>
+      <span><i style="background:var(--pink)"></i> Wedding — May 2027</span>
+      <span><i style="background:#16a34a"></i> Bob RRSP '27 deadline — Mar 2028 (2027 refund)</span>
+    </div>
+    <div class="note">
+      <b>Accounts are per person.</b> Leftover cash each month cascades in this fixed order: <b>Bob RRSP '26 → Bob RRSP '27 → Sally RRSP → Bob TFSA → Sally TFSA</b>. Bob's RRSP is split by tax year: the <b>$18,000 of 2026 room must be filled by ~Mar 1 2027</b> to claim the 2026 refund; the <b>$9,000 of new 2027 room</b> opens in Jan 2027 and has until ~Mar 2028 for the 2027 refund. Sally's RRSP room ($8k) also only opens in 2027. Vertical lines mark these deadlines.<br><br>
+      <b>Three strategies:</b> <b>Parallel</b> — lifestyle goals take fixed monthly slices, accounts absorb the rest. <b>Waterfall</b> — one goal at a time in priority order. <b>Custom (phased, shown)</b> — set each lifestyle goal's monthly $ <i>and</i> a start month (e.g. RRSP + wedding now, vacation/furniture deferred); the accounts soak up whatever's left. Bulk car dumps (car card) come off that month's surplus — except ones flagged "existing cash" like Sally's $4k, which don't.<br><br>
+      The <b>~$5k RRSP refund</b> arriving spring 2027 isn't modeled in the bars; routing it to the car loan or a TFSA pulls finish lines in. *FIRE estimate ignores investment growth — purely savings ÷ target, so the real timeline is faster.
+    </div>
+  </div>
+
+  <!-- ================= CAR LUMP-SUM ================= -->
+  <div class="card">
+    <div class="cardhead">
+      <div><h2>Honda Civic loan — $18,000 @ 7.0%</h2>
+      <p class="sub">This debt actually costs money. Paying it down is a <b>guaranteed, risk-free 7.0% return</b> — higher than your ~6% investment assumption, so a lump sum here is often your best-value dollar. Try one below.</p></div>
+    </div>
+
+    <div class="controls">
+      <div style="min-width:300px">
+        <div class="ctl-lbl">Bulk dump schedule — these draw from your monthly surplus</div>
+        <div class="dumps" id="carDumpRows"></div>
+        <button class="addbtn" id="addDump">+ Add a dump</button>
+      </div>
+    </div>
+
+    <div class="stats" id="carStats"></div>
+
+    <h2 style="font-size:14px;margin:22px 0 2px">Loan balance over time</h2>
+    <p class="sub">Amber = minimum payments only. Green = with your scheduled dumps. The gap closes the loan sooner and skips the interest in between.</p>
+    <svg id="carChart" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid meet" style="margin-top:6px"></svg>
+
+    <div class="note">
+      <b>Decision rule:</b> a dollar against this loan earns a <b>guaranteed 7.0%</b>; the same dollar in your TFSA earns ~6% <i>and isn’t guaranteed</i>. So on a risk-adjusted basis the car loan usually wins — it’s arguably a higher priority than topping up the TFSA. <b>Opportune times</b> = whenever a goal finishes and frees cash, or any windfall like the spring-2027 RRSP refund — there’s no penalty for early payoff, and every month carried costs ~7.0%/yr. Dumps are wired into the goal timeline above, so you can see what each one costs your investing pace that month.
+    </div>
+  </div>
+
+  <!-- ================= NET WORTH & FIRE ================= -->
+  <div class="card">
+    <div class="cardhead">
+      <div><h2>Net worth &amp; FIRE projection</h2>
+      <p class="sub">Today's holdings compounded forward, plus what you keep investing — with Full FIRE and Coast FIRE milestones.</p></div>
+    </div>
+
+    <div class="assets" id="assetsBox"></div>
+
+    <div class="controls" style="margin-top:18px">
+      <div>
+        <div class="ctl-lbl">Assumptions (edit freely)</div>
+        <div class="inputs">
+          <div class="inp"><label>Return %/yr (nominal)</label><input id="nwReturn" type="number" step="0.5" value="6"></div>
+          <div class="inp"><label>Bob age now</label><input id="nwAge" type="number" step="1" value="34"></div>
+          <div class="inp"><label>Coast retire age</label><input id="nwRetAge" type="number" step="1" value="60"></div>
+          <div class="inp"><label>FIRE target</label><input id="nwFire" type="number" step="10000" value="1250000"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="nwStats"></div>
+
+    <svg id="nwChart" viewBox="0 0 920 320" preserveAspectRatio="xMidYMid meet" style="margin-top:8px"></svg>
+    <div class="legend2" id="nwLegend"></div>
+
+    <div class="note">
+      <b>Coast FIRE</b> = the point where your invested assets are big enough that, <i>even if you never contribute another dollar</i>, normal market growth carries them to your FIRE number by your retirement age. Once you cross it, work/saving becomes optional — you’re just “coasting.” <b>Full FIRE</b> = the portfolio actually reaching your target (here $1.25M, ~4% withdrawal ≈ $50k/yr). After Full FIRE the line models a 4%/yr drawdown, so it roughly plateaus.<br><br>
+      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); Bob’s age is a guess — set it and the retire age for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
+    </div>
+  </div>
+</div>
+
+<script>
+//============ DATA ============
+const INCOME = [
+  {id:"bob", name:"Bob — salary", value:4800, color:"var(--blue)"},
+  {id:"sallyS", name:"Sally — salary", value:3400, color:"var(--indigo)"},
+  {id:"sallyB", name:"Sally — side gig", value:300, color:"var(--violet)"},
+];
+const EXPENSES = [
+  {name:"Mortgage", value:2100},
+  {name:"Groceries", value:850},
+  {name:"Discretionary", value:500},
+  {name:"Car Payment", value:410},
+  {name:"Utilities", value:300},
+  {name:"Property Tax", value:300},
+  {name:"Travel", value:250},
+  {name:"Gas", value:220},
+  {name:"Car Insurance", value:160},
+  {name:"Home Insurance", value:130},
+  {name:"Phone", value:110},
+  {name:"Internet", value:80},
+];
+const SURPLUS = 3090; // 8,500 income − 5,410 living+car expenses
+
+// ── Registered-account room, per person ──────────────────────────────
+// Sally's RRSP + both TFSAs grow with 2027 room (one-time bump at month 6).
+// Bob's RRSP is split into two goals (below) with their own tax deadlines.
+const ROOM_2026 = {
+  rrsp_e: 0,                // Sally: no 2026 RRSP room
+  tfsa_t: 22000,            // Bob TFSA
+  tfsa_e: 15000,            // Sally TFSA
+};
+// new room unlocking Jan 2027 (month index 6)
+const NEW_ROOM_MONTH = 6;
+const NEW_2027 = { rrsp_e:8000, tfsa_t:7000, tfsa_e:7000 };
+const targetAt = (g, mi) =>
+  (g.key in ROOM_2026) ? ROOM_2026[g.key] + (mi>=NEW_ROOM_MONTH ? NEW_2027[g.key] : 0) : g.target;
+
+const GOAL_DEFS = [
+  {key:"emergency", name:"Emergency fund", target:15000, monthly:1000, color:"var(--orange)"},
+  {key:"wedding",   name:"Wedding",        target:20000, monthly:2000, color:"var(--pink)", deadline:10},
+  {key:"vacation",  name:"Vacation",       target:6000,  monthly:800,  color:"var(--sky)"},
+  {key:"furniture", name:"Furniture",      target:5000,  monthly:800,  color:"var(--violet)"},
+  {key:"homerepair",name:"Home repairs",   target:8000,  monthly:1000, color:"#b45309"},
+  {key:"carfund",   name:"Next-car fund",  target:10000, monthly:800,  color:"#eab308"},
+  // Bob RRSP 2026 room — fill by Mar 2027 (mo 8) to claim the 2026 refund
+  {key:"rrsp_t26", name:"Bob RRSP '26", target:18000, invest:true, who:"Bob", color:"var(--green)", deadline:8},
+  // Bob RRSP 2027 room — opens Jan 2027 (mo 6), fill by Mar 2028 (mo 20) for the 2027 refund
+  {key:"rrsp_t27", name:"Bob RRSP '27", target:9000, invest:true, who:"Bob", color:"#16a34a", start:6, deadline:20},
+  {key:"rrsp_e", name:"Sally RRSP",  target:ROOM_2026.rrsp_e, invest:true, who:"Sally",  color:"#15803d"},
+  {key:"tfsa_t", name:"Bob TFSA",   target:ROOM_2026.tfsa_t, invest:true, who:"Bob",   color:"#34d399"},
+  {key:"tfsa_e", name:"Sally TFSA", target:ROOM_2026.tfsa_e, invest:true, who:"Sally", color:"#2dd4bf"},
+];
+const LIFESTYLE = ["emergency","wedding","vacation","furniture","homerepair","carfund"];
+// registered accounts absorb leftover cash, in this priority order:
+// Bob RRSP '26 → '27 → Sally RRSP → Bob TFSA → Sally TFSA
+const INVEST_ORDER = ["rrsp_t26","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"];
+// waterfall: strict one-goal-at-a-time order
+const WF_ORDER = ["emergency","wedding","rrsp_t26","carfund","vacation","furniture","homerepair","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"];
+
+const CAR_LOAN = {balance:18000, biweekly:189, rate:0.07, monthly:189*26/12}; // ~$410/mo @ 7.0%
+
+// currently-held assets per person (for the net-worth projection)
+const ASSETS = {
+  Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
+  Sally: [["Chequing",2500],["Savings",6000],["TFSA",16000],["RRSP (work pension)",22000]],
+};
+const sumAssets = who => ASSETS[who].reduce((a,[,v])=>a+v,0);
+const NET_WORTH_TODAY = sumAssets("Bob") + sumAssets("Sally") - CAR_LOAN.balance;
+
+let mode = "custom";
+// lifestyle goals: monthly cap + start month (start months only used in custom mode)
+let monthly = {emergency:1000, wedding:2000, vacation:800, furniture:800, homerepair:1000, carfund:800};
+let startMo = {emergency:0,    wedding:0,    vacation:11,  furniture:11,  homerepair:16,    carfund:16};
+// one-time bulk principal dumps at the car loan.
+// fromSavings:true = paid from existing cash, so it does NOT reduce the monthly surplus.
+let carDumps = [
+  {month:0,  amount:4000, fromSavings:true},  // Sally's $4k already saved & ready
+  {month:12, amount:5000},                    // a later dump funded from surplus
+];
+
+//============ UNDO (funding-goal amounts & start months) ============
+let goalHistory = [], goalPending = null;
+const goalSnap = () => ({ monthly:{...monthly}, startMo:{...startMo} });
+function markGoalPending(){ goalPending = goalSnap(); }           // capture pre-edit state
+function commitGoalPending(){                                     // push it once a real change lands
+  if(goalPending){ goalHistory.push(goalPending); if(goalHistory.length>100) goalHistory.shift(); goalPending=null; updateUndoBtn(); }
+}
+function undoGoals(){
+  if(!goalHistory.length) return;
+  const s = goalHistory.pop();
+  monthly = {...s.monthly}; startMo = {...s.startMo}; goalPending = null;
+  renderInputs(); renderAll(); renderNW(); updateUndoBtn();
+}
+function updateUndoBtn(){ const b=document.getElementById("undoBtn"); if(b) b.disabled = goalHistory.length===0; }
+
+//============ PERSISTENCE (localStorage) ============
+const STORAGE_KEY = "finplan_demo_v1";
+function persist(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      mode, monthly, startMo, carDumps,
+      nwReturn: document.getElementById("nwReturn")?.value,
+      nwAge: document.getElementById("nwAge")?.value,
+      nwRetAge: document.getElementById("nwRetAge")?.value,
+      nwFire: document.getElementById("nwFire")?.value,
+    }));
+  }catch(e){/* storage unavailable (e.g. private mode) — ignore */}
+}
+function loadState(){
+  let s; try{ s = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){ return; }
+  if(!s) return;
+  if(s.mode) mode = s.mode;
+  if(s.monthly) Object.assign(monthly, s.monthly);
+  if(s.startMo) Object.assign(startMo, s.startMo);
+  if(Array.isArray(s.carDumps)) carDumps = s.carDumps;
+  window._saved = s; // net-worth input values applied after the DOM/vars exist
+}
+
+//============ HELPERS ============
+const fmt = n => "$"+Math.round(n).toLocaleString();
+const cssVar = v => v.startsWith("var(") ? getComputedStyle(document.documentElement).getPropertyValue(v.slice(4,-1)).trim() : v;
+const START = {y:2026, m:6}; // July 2026 = index 0
+function monthLabel(i){
+  const d = new Date(START.y, START.m+i, 1);
+  return d.toLocaleString("en-US",{month:"short"})+" '"+String(d.getFullYear()).slice(2);
+}
+const VIEW_MONTHS = 24; // Jul'26 → Jul'28
+
+//============ SIMULATION ============
+const goalBy = k => GOAL_DEFS.find(g=>g.key===k);
+// dumps that draw from the monthly surplus (existing-cash dumps don't)
+const carDumpSurplusAt = mi => carDumps.reduce((a,d)=> a + ((+d.month===mi && !d.fromSavings)?(+d.amount||0):0), 0);
+
+function simulate(){
+  const bal={}, start={}, end={}, alloc0={}, alloc=[];
+  GOAL_DEFS.forEach(g=>bal[g.key]=0);
+  // build the ordered fund list: lifestyle goals (capped) then registered accounts (absorb remainder)
+  let order;
+  if(mode==="waterfall"){
+    order = WF_ORDER.map(k=>({...goalBy(k), cap:Infinity, start:0}));
+  } else {
+    const life = LIFESTYLE.map(k=>({...goalBy(k), cap:(monthly[k]||0), start: mode==="custom"?(startMo[k]||0):0}));
+    const inv  = INVEST_ORDER.map(k=>({...goalBy(k), cap:Infinity, start:(goalBy(k).start||0)}));
+    order = [...life, ...inv];
+  }
+  for(let mi=0; mi<72; mi++){
+    let avail = Math.max(0, SURPLUS - carDumpSurplusAt(mi)); // surplus-funded car dumps come off the top
+    const a = {}; alloc[mi] = a;                              // per-month, per-goal allocation
+    for(const g of order){
+      if(mi < (g.start||0)) continue;
+      const tgt = targetAt(g, mi);
+      if(bal[g.key] >= tgt-0.01 || avail<=0) continue;
+      const c = Math.min(g.cap, tgt-bal[g.key], avail);
+      if(c<=0) continue;
+      if(start[g.key]===undefined) start[g.key]=mi;
+      if(mi===0) alloc0[g.key]=(alloc0[g.key]||0)+c;
+      a[g.key] = (a[g.key]||0) + c;
+      bal[g.key]+=c; avail-=c;
+    }
+    // record/clear completion against this month's (possibly grown) target
+    for(const g of GOAL_DEFS){
+      const tgt = targetAt(g, mi);
+      if(bal[g.key] >= tgt-0.01){ if(end[g.key]===undefined) end[g.key]=mi; }
+      else { end[g.key]=undefined; }
+    }
+  }
+  return {start,end,alloc0,bal,alloc};
+}
+let lastSim = null;        // most recent simulation, for the hover tooltip
+let dragging = false;      // suppress tooltip while dragging a bar
+
+//============ SANKEY ============
+function buildSankeyModel(alloc0){
+  // tier-3 buckets from month-0 allocation — each goal (incl. per-person accounts) shown separately
+  const buckets = [];
+  GOAL_DEFS.forEach(g=>{ if(alloc0[g.key]>0) buckets.push({id:g.key,name:g.name,value:alloc0[g.key],color:g.color}); });
+  const dump0 = carDumpSurplusAt(0);
+  if(dump0>0) buckets.push({id:"cardump",name:"Car lump payoff",value:dump0,color:"#5c6373"});
+  buckets.sort((a,b)=>b.value-a.value);
+
+  const nodes=[], links=[];
+  // col0 sources
+  INCOME.forEach(s=>nodes.push({id:s.id,name:s.name,value:s.value,col:0,color:s.color}));
+  // col1 hub
+  nodes.push({id:"income",name:"Income",value:8500,col:1,color:"#c5cbd8"});
+  INCOME.forEach(s=>links.push({source:s.id,target:"income",value:s.value,color:s.color}));
+  // col2 outflows
+  const savingsTotal = buckets.reduce((a,b)=>a+b.value,0);
+  nodes.push({id:"savings",name:"Savings & Investing",value:savingsTotal,col:2,color:"var(--green)"});
+  links.push({source:"income",target:"savings",value:savingsTotal,color:"var(--green)"});
+  const expColors=["var(--red)","var(--orange)","var(--amber)"];
+  EXPENSES.forEach((e,i)=>{
+    const c = i%2? "var(--orange)":"var(--red)";
+    nodes.push({id:"e"+i,name:e.name,value:e.value,col:2,color:c});
+    links.push({source:"income",target:"e"+i,value:e.value,color:c});
+  });
+  // col3 buckets
+  buckets.forEach(b=>{
+    nodes.push({id:"b_"+b.id,name:b.name,value:b.value,col:3,color:b.color});
+    links.push({source:"savings",target:"b_"+b.id,value:b.value,color:b.color});
+  });
+  return {nodes,links};
+}
+
+function renderSankey(alloc0){
+  const {nodes,links} = buildSankeyModel(alloc0);
+  const W=1300,H=780, mL=150, mR=255, mT=22, mB=22, nodeW=18, pad=9;
+  const cols=[0,1,2,3];
+  const colNodes = cols.map(c=>nodes.filter(n=>n.col===c));
+  // global scale: tightest column
+  const usableH=H-mT-mB;
+  let scale=Infinity;
+  colNodes.forEach(cn=>{
+    if(!cn.length) return;
+    const tot=cn.reduce((a,n)=>a+n.value,0);
+    const s=(usableH-(cn.length-1)*pad)/tot;
+    scale=Math.min(scale,s);
+  });
+  // x per column
+  const step=(W-mL-mR-nodeW)/(cols.length-1);
+  const colX=cols.map(c=>mL+c*step);
+  // stack nodes (centered)
+  const byId={};
+  colNodes.forEach((cn,ci)=>{
+    const tot=cn.reduce((a,n)=>a+n.value,0);
+    const blockH=tot*scale+(cn.length-1)*pad;
+    let y=mT+(usableH-blockH)/2;
+    cn.forEach(n=>{
+      n.x0=colX[ci]; n.x1=colX[ci]+nodeW; n.y0=y; n.y1=y+n.value*scale;
+      n.out=[]; n.in=[]; byId[n.id]=n; y=n.y1+pad;
+    });
+  });
+  links.forEach(l=>{ l.s=byId[l.source]; l.t=byId[l.target]; l.s.out.push(l); l.t.in.push(l); });
+  // assign offsets
+  Object.values(byId).forEach(n=>{
+    n.out.sort((a,b)=>a.t.y0-b.t.y0); let o=n.y0;
+    n.out.forEach(l=>{ l.sy=o; o+=l.value*scale; });
+    n.in.sort((a,b)=>a.s.y0-b.s.y0); let i=n.y0;
+    n.in.forEach(l=>{ l.ty=i; i+=l.value*scale; });
+  });
+  // draw
+  let s='';
+  links.forEach(l=>{
+    const w=Math.max(1,l.value*scale);
+    const x0=l.s.x1, x1=l.t.x0, y0=l.sy+w/2, y1=l.ty+w/2, xm=(x0+x1)/2;
+    s+=`<path d="M${x0},${y0} C${xm},${y0} ${xm},${y1} ${x1},${y1}" fill="none" stroke="${cssVar(l.color)}" stroke-width="${w}" opacity="0.34"/>`;
+  });
+  nodes.forEach(n=>{
+    s+=`<rect x="${n.x0}" y="${n.y0}" width="${nodeW}" height="${Math.max(1,n.y1-n.y0)}" rx="2" fill="${cssVar(n.color)}"/>`;
+    const cy=(n.y0+n.y1)/2;
+    if(n.col===0){
+      s+=`<text x="${n.x0-8}" y="${cy-1}" text-anchor="end" dominant-baseline="middle">${n.name}</text>`;
+      s+=`<text x="${n.x0-8}" y="${cy+13}" text-anchor="end" dominant-baseline="middle" class="val">${fmt(n.value)}</text>`;
+    } else if(n.col===1){
+      s+=`<text x="${(n.x0+n.x1)/2}" y="${n.y0-10}" text-anchor="middle" font-weight="600">${n.name}</text>`;
+      s+=`<text x="${(n.x0+n.x1)/2}" y="${n.y0-26}" text-anchor="middle" class="val" font-size="13">${fmt(n.value)}</text>`;
+    } else {
+      const bold = n.id==="savings"?' font-weight="600"':'';
+      s+=`<text x="${n.x1+8}" y="${cy}" dominant-baseline="middle"${bold}>${n.name} <tspan class="val">${fmt(n.value)}</tspan></text>`;
+    }
+  });
+  document.getElementById("sankey").innerHTML=s;
+}
+
+//============ GANTT ============
+const LABELS = {
+  parallel:"Monthly $ per lifestyle goal · accounts absorb the rest (Bob RRSP → Sally RRSP → TFSAs)",
+  waterfall:"One goal at a time, in priority order (amounts fixed)",
+  custom:"Monthly $ &amp; start month per lifestyle goal · accounts absorb the rest, in cascade order below",
+};
+function renderInputs(){
+  const box=document.getElementById("inputs"); box.innerHTML="";
+  document.getElementById("inputsLabel").innerHTML = LABELS[mode];
+
+  if(mode==="custom"){
+    LIFESTYLE.forEach(k=>{
+      const g=goalBy(k);
+      const d=document.createElement("div"); d.className="inp";
+      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${g.name}</label>
+        <div class="inrow">
+          <input type="number" step="100" min="0" value="${monthly[k]||0}" data-key="${k}" data-f="m" title="monthly $">
+          <span class="x">@</span>
+          <input class="mo" type="number" step="1" min="0" max="36" value="${startMo[k]||0}" data-key="${k}" data-f="s" title="start month">
+          <span class="hint">${monthLabel(startMo[k]||0)}</span>
+        </div>`;
+      box.appendChild(d);
+    });
+    const casc=document.createElement("div"); casc.className="inp cascade";
+    casc.innerHTML=`<label>Then leftover cascades →</label>
+      <div class="cascrow">${INVEST_ORDER.map((k,i)=>`<span class="chip"><span class="dot" style="background:${cssVar(goalBy(k).color)}"></span>${goalBy(k).name}</span>${i<INVEST_ORDER.length-1?'<span class="arr">→</span>':''}`).join("")}</div>`;
+    box.appendChild(casc);
+    box.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("focus", markGoalPending);
+      inp.addEventListener("input",e=>{
+        commitGoalPending();
+        const k=e.target.dataset.key, v=+e.target.value||0;
+        if(e.target.dataset.f==="m") monthly[k]=v; else startMo[k]=v;
+        if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(v);
+        renderAll();
+      });
+    });
+  } else {
+    LIFESTYLE.forEach(k=>{
+      const g=goalBy(k);
+      const d=document.createElement("div"); d.className="inp";
+      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${g.name}</label>
+        <input type="number" step="50" min="0" value="${monthly[k]}" data-key="${k}" ${mode==="waterfall"?"disabled":""}>`;
+      box.appendChild(d);
+    });
+    box.querySelectorAll("input").forEach(inp=>{
+      inp.addEventListener("focus", markGoalPending);
+      inp.addEventListener("input",e=>{ commitGoalPending(); monthly[e.target.dataset.key]=+e.target.value||0; renderAll(); });
+    });
+  }
+}
+
+// drag a lifestyle bar to move its start month, or drag its right edge to change $/mo
+function startBarDrag(e, key, kind){
+  e.preventDefault();
+  const track = e.target.closest(".track");
+  const pxPerMonth = track.getBoundingClientRect().width / VIEW_MONTHS;
+  const g = goalBy(key);
+  const origStart = startMo[key]||0;
+  const origDur = Math.max(1, Math.round(g.target / Math.max(1, monthly[key]||0)));
+  const startX = e.clientX;
+  markGoalPending(); // snapshot pre-drag state; committed on first actual change
+  dragging = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = kind==="resize" ? "ew-resize" : "grabbing";
+  let changed = false;
+  // light per-move refresh: only the gantt + the input boxes (keeps them in sync).
+  // The heavy Sankey + FIRE projection are deferred to mouseup so fast drags don't skip months.
+  const liveUpdate = () => { changed = true; renderGantt(simulate()); renderInputs(); };
+  function move(ev){
+    const dM = Math.round((ev.clientX - startX) / pxPerMonth);
+    if(kind==="move"){
+      const ns = Math.max(0, Math.min(VIEW_MONTHS-1, origStart + dM));
+      if(ns !== (startMo[key]||0)){ commitGoalPending(); startMo[key] = ns; liveUpdate(); }
+    } else {
+      const newDur = Math.max(1, origDur + dM);
+      const nm = Math.round(g.target / newDur);
+      if(nm !== (monthly[key]||0)){ commitGoalPending(); monthly[key] = nm; liveUpdate(); }
+    }
+  }
+  function up(){
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", up);
+    document.body.style.userSelect = ""; document.body.style.cursor = "";
+    dragging = false;
+    if(changed){ renderAll(); renderNW(); } // full refresh (Sankey, projection, persist) once
+  }
+  document.addEventListener("mousemove", move);
+  document.addEventListener("mouseup", up);
+}
+
+function renderGantt(sim){
+  lastSim = sim;
+  const {start,end,bal}=sim;
+  const total=VIEW_MONTHS;
+  const pct=i=>Math.min(100,(i/total)*100);
+  // axis labels every 2 months
+  const axis=document.getElementById("axis"); axis.innerHTML="";
+  for(let i=0;i<=total;i+=2){
+    const sp=document.createElement("span"); sp.style.left=pct(i)+"%"; sp.textContent=monthLabel(i); axis.appendChild(sp);
+  }
+  // gridlines + deadlines
+  const gl=document.getElementById("gridlines"); gl.innerHTML="";
+  for(let i=0;i<=total;i++){
+    const ln=document.createElement("i"); ln.style.left=pct(i)+"%"; if(i%6===0)ln.className="q"; gl.appendChild(ln);
+  }
+  // deadline markers, driven by each goal's `deadline`
+  GOAL_DEFS.filter(g=>g.deadline!=null).forEach(g=>{
+    const d=document.createElement("div"); d.className="deadline";
+    d.style.left=pct(g.deadline)+"%"; d.style.background=cssVar(g.color);
+    d.title=`${g.name} deadline — ${monthLabel(g.deadline)}`; gl.appendChild(d);
+  });
+
+  const rows=document.getElementById("rows"); rows.innerHTML="";
+  const order = mode==="waterfall"
+    ? WF_ORDER.map(k=>GOAL_DEFS.find(g=>g.key===k))
+    : GOAL_DEFS;
+  order.forEach(g=>{
+    const s=start[g.key], e=end[g.key];
+    if(s===undefined) return;
+    const eShown = e===undefined? total : e;
+    const clamped = eShown>=total;
+    const left=pct(s), width=Math.max(2.2, pct(eShown+1)-pct(s));
+    const months=(eShown - s)+1;
+    const totalSaved=targetAt(g, VIEW_MONTHS);
+    const newRoom = (g.key in NEW_2027) ? NEW_2027[g.key] : 0;
+    // accounts absorb a varying amount each month — show the average $/mo over their funding window
+    const funded = (e!==undefined) ? totalSaved : (bal[g.key]||0);
+    const avgMo = funded / Math.max(1, eShown - s + 1);
+    const mlabel = g.invest
+      ? `~${fmt(avgMo)}/mo` + (newRoom?` · +${fmt(newRoom)} in 2027`:"")
+      : fmt(monthly[g.key]||0)+"/mo";
+    const finishTxt = e===undefined? "after "+monthLabel(total) : monthLabel(e);
+    const moTxt = g.invest ? `~${fmt(avgMo)}/mo` : `${fmt(monthly[g.key]||0)}/mo`;
+    // on the bar: $/mo (solid) + muted payoff date, depending on available width
+    const barLabel = width>26 ? `<span class="amt">${moTxt}</span> <span class="dt">→ ${finishTxt}</span>`
+                   : width>11 ? `<span class="amt">${moTxt}</span>` : "";
+    // lifestyle goals are drag-to-move / resize-to-reprice (custom mode only)
+    const drag = (!g.invest && mode==="custom");
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`
+      <div class="rl"><span class="dot" style="background:${cssVar(g.color)}"></span>
+        <div>${g.name}<br><small>${fmt(totalSaved)} · ${mlabel}</small></div></div>
+      <div class="track">
+        <div class="bar ${clamped&&e===undefined?'arrow':''} ${drag?'draggable':''}" data-key="${g.key}" style="left:${left}%;width:${width}%;background:${cssVar(g.color)}">
+          ${barLabel}${drag?'<div class="rz" data-key="'+g.key+'"></div>':''}
+        </div>
+      </div>
+      <div class="rr">done <b>${finishTxt}</b></div>`;
+    rows.appendChild(row);
+  });
+  // wire up drag-to-move and resize-to-reprice on lifestyle bars
+  rows.querySelectorAll(".bar.draggable").forEach(bar=>{
+    bar.addEventListener("mousedown",e=>{ if(e.target.classList.contains("rz")) return; startBarDrag(e, bar.dataset.key, "move"); });
+  });
+  rows.querySelectorAll(".rz").forEach(h=>{
+    h.addEventListener("mousedown",e=>{ e.stopPropagation(); startBarDrag(e, h.dataset.key, "resize"); });
+  });
+  // car loan row (independent debt) — real 7.0% amortization incl. scheduled dumps
+  const cmo = carAmort(CAR_LOAN.balance, CAR_LOAN.biweekly, CAR_LOAN.rate, carDumps).months;
+  const beyond = cmo > total;
+  const cwidth = beyond ? 100 : Math.max(4, pct(cmo+1));
+  const payDate = new Date(2026,6+Math.round(cmo),1).toLocaleString("en-US",{month:"short",year:"numeric"});
+  const cl=document.createElement("div"); cl.className="row";
+  cl.innerHTML=`
+    <div class="rl"><span class="dot" style="background:var(--faint)"></span>
+      <div>Honda Civic loan (7.0%)<br><small>${fmt(CAR_LOAN.balance)} · ${fmt(CAR_LOAN.monthly)}/mo</small></div></div>
+    <div class="track">
+      <div class="bar ${beyond?'arrow':''}" style="left:0%;width:${cwidth}%;background:#3a4150;color:var(--txt)">paying down → ~${payDate}</div>
+    </div>
+    <div class="rr">~<b>${(cmo/12).toFixed(1)}y</b></div>`;
+  rows.appendChild(cl);
+}
+
+//============ FIRE ============
+function renderFire(){
+  const yrs = 1250000/(SURPLUS*12);
+  document.getElementById("fireYears").textContent = yrs.toFixed(1)+" yr";
+}
+
+//============ DRIVE ============
+function renderAll(){
+  const sim=simulate();
+  renderSankey(sim.alloc0);
+  renderGantt(sim);
+  persist();
+}
+document.querySelectorAll(".btn[data-mode]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".btn[data-mode]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); mode=b.dataset.mode; renderInputs(); renderAll();
+  });
+});
+//============ CAR LUMP-SUM ============
+// biweekly amortization; `dumps` = [{month, amount}] one-time principal payments
+function carAmort(balance, biweekly, annualRate, dumps=[]){
+  const r=annualRate/26; let bal=balance, p=0, interest=0;
+  const byPeriod={}; dumps.forEach(d=>{ const per=Math.round((+d.month||0)*26/12); byPeriod[per]=(byPeriod[per]||0)+(+d.amount||0); });
+  const curve=[{m:0,bal:balance}];
+  while(bal>0.01 && p<2000){
+    if(byPeriod[p]) bal=Math.max(0,bal-byPeriod[p]);
+    if(bal<=0) break;
+    const i=bal*r; interest+=i; bal=bal-(biweekly-i); if(bal<0)bal=0; p++;
+    if(p%2===0||bal<=0) curve.push({m:p*12/26,bal});
+  }
+  return {periods:p, months:p*12/26, interest, curve};
+}
+const carDt = m => new Date(2026,6+Math.round(m),1).toLocaleString("en-US",{month:"short",year:"numeric"});
+
+function renderCarSchedule(){
+  const box=document.getElementById("carDumpRows"); box.innerHTML="";
+  carDumps.forEach((d,i)=>{
+    const row=document.createElement("div"); row.className="dumprow";
+    row.innerHTML=`$<input class="amt" type="number" step="1000" min="0" value="${d.amount}" data-i="${i}" data-f="amount">
+      <span class="x">in month</span>
+      <input class="mo" type="number" step="1" min="0" max="48" value="${d.month}" data-i="${i}" data-f="month">
+      <span class="hint">${carDt(d.month)}</span>
+      <label class="cashtog" title="Paid from existing cash — doesn't reduce your monthly investing surplus">
+        <input type="checkbox" data-i="${i}" data-f="fromSavings" ${d.fromSavings?"checked":""}> existing cash</label>
+      <button class="del" data-i="${i}" title="remove">×</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll("input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
+    carDumps[+e.target.dataset.i][e.target.dataset.f]=+e.target.value||0;
+    if(e.target.dataset.f==="month") e.target.parentElement.querySelector(".hint").textContent=carDt(+e.target.value||0);
+    renderCar(); renderAll(); // dumps affect the goal timeline too
+  }));
+  box.querySelectorAll("input[type=checkbox]").forEach(inp=>inp.addEventListener("change",e=>{
+    carDumps[+e.target.dataset.i].fromSavings = e.target.checked;
+    renderCar(); renderAll();
+  }));
+  box.querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{
+    carDumps.splice(+b.dataset.i,1); renderCarSchedule(); renderCar(); renderAll();
+  }));
+}
+
+function renderCar(){
+  const L=CAR_LOAN;
+  const base=carAmort(L.balance, L.biweekly, L.rate);
+  const scen=carAmort(L.balance, L.biweekly, L.rate, carDumps);
+  const totalDumped=carDumps.reduce((a,d)=>a+(+d.amount||0),0);
+  const intSaved=base.interest-scen.interest;
+  const moSaved=base.months-scen.months;
+  const investGain=totalDumped*(Math.pow(1.06, base.months/12)-1);
+  document.getElementById("carStats").innerHTML=`
+    <div class="stat"><div class="k">Payoff — minimum only</div><div class="v sm">${carDt(base.months)}</div><div class="k" style="margin-top:3px">${fmt(base.interest)} interest</div></div>
+    <div class="stat"><div class="k">Payoff — with dumps</div><div class="v sm" style="color:var(--green)">${carDt(scen.months)}</div><div class="k" style="margin-top:3px">${fmt(scen.interest)} interest</div></div>
+    <div class="stat"><div class="k">Total dumped</div><div class="v sm">${fmt(totalDumped)}</div></div>
+    <div class="stat"><div class="k">Interest saved (guaranteed)</div><div class="v sm" style="color:var(--green)">${fmt(intSaved)}</div></div>
+    <div class="stat"><div class="k">Loan shortened by</div><div class="v sm">${moSaved.toFixed(1)} mo</div></div>
+    <div class="stat"><div class="k">Same $ in TFSA @6%*</div><div class="v sm" style="color:var(--blue)">+${fmt(investGain)}</div><div class="k" style="margin-top:3px">not guaranteed</div></div>`;
+  renderCarChart(base, scen);
+}
+
+function renderCarChart(base, scen){
+  const W=900,H=280, pL=58,pR=16,pT=14,pB=28;
+  const maxM=base.months, maxY=CAR_LOAN.balance*1.05;
+  const X=m=>pL+(m/maxM)*(W-pL-pR);
+  const Y=v=>H-pB-(v/maxY)*(H-pT-pB);
+  let s="";
+  for(let i=0;i<=4;i++){ const v=maxY*i/4, y=Y(v);
+    s+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="var(--line)"/>`;
+    s+=`<text x="${pL-8}" y="${y+4}" text-anchor="end" fill="var(--faint)" font-size="11">${fmt(v)}</text>`; }
+  for(let m=0;m<=maxM;m+=12){ s+=`<text x="${X(m)}" y="${H-9}" text-anchor="middle" fill="var(--faint)" font-size="11">${new Date(2026,6+m,1).getFullYear()}</text>`; }
+  const path=(curve,color,w)=>`<path d="M${curve.map(p=>`${X(p.m).toFixed(1)},${Y(p.bal).toFixed(1)}`).join(" L")}" fill="none" stroke="${cssVar(color)}" stroke-width="${w}"/>`;
+  s+=path(base.curve,'var(--amber)',2);
+  s+=path(scen.curve,'var(--green)',2.5);
+  // legend
+  s+=`<rect x="${pL+8}" y="${pT}" width="12" height="3" fill="${cssVar('var(--amber)')}"/><text x="${pL+24}" y="${pT+5}" fill="var(--muted)" font-size="11">minimum payments</text>`;
+  s+=`<rect x="${pL+8}" y="${pT+16}" width="12" height="3" fill="${cssVar('var(--green)')}"/><text x="${pL+24}" y="${pT+21}" fill="var(--muted)" font-size="11">with scheduled dumps</text>`;
+  document.getElementById("carChart").innerHTML=s;
+}
+
+//============ NET WORTH & FIRE ============
+function renderAssets(){
+  const box=document.getElementById("assetsBox"); box.innerHTML="";
+  const dotFor = who => who==="Bob"?"var(--blue)":"var(--indigo)";
+  ["Bob","Sally"].forEach(who=>{
+    const col=document.createElement("div"); col.className="asset-col";
+    const rows=ASSETS[who].map(([n,v])=>`<div class="arow"><span>${n}</span><span>${fmt(v)}</span></div>`).join("");
+    col.innerHTML=`<h3><span class="dot" style="background:${cssVar(dotFor(who))}"></span>${who}</h3>${rows}
+      <div class="asub"><span>Subtotal</span><span>${fmt(sumAssets(who))}</span></div>`;
+    box.appendChild(col);
+  });
+  const bar=document.createElement("div"); bar.className="nwbar";
+  bar.innerHTML=`
+    <div><div class="lbl">Net worth today</div><div class="big" style="color:var(--green)">${fmt(NET_WORTH_TODAY)}</div></div>
+    <div class="pc">${fmt(sumAssets("Bob")+sumAssets("Sally"))} assets − ${fmt(CAR_LOAN.balance)} car loan.</div>`;
+  box.appendChild(bar);
+}
+
+function renderNW(){
+  const r=(+document.getElementById("nwReturn").value||0)/100;
+  const age=+document.getElementById("nwAge").value||0;
+  const retAge=+document.getElementById("nwRetAge").value||65;
+  const fire=+document.getElementById("nwFire").value||0;
+  const sim=simulate();
+  const lifeSpend = mi => LIFESTYLE.reduce((a,k)=>{const s=sim.start[k],e=sim.end[k];
+    return a+((s!==undefined&&mi>=s&&(e===undefined||mi<=e))?(monthly[k]||0):0);},0);
+  const yearsToRet=Math.max(1,retAge-age);
+  const horizon=Math.min(480, Math.max(yearsToRet+2,12)*12);
+  const withC=[{m:0,v:NET_WORTH_TODAY}], coast=[{m:0,v:NET_WORTH_TODAY}];
+  let nw=NET_WORTH_TODAY, cn=NET_WORTH_TODAY, fireMonth=null, retired=false;
+  const draw=fire*0.04/12;
+  for(let mi=0;mi<horizon;mi++){
+    let contrib;
+    if(!retired && nw<fire){ contrib=Math.max(0, SURPLUS - lifeSpend(mi)); }
+    else { retired=true; contrib=-draw; }
+    nw=nw*(1+r/12)+contrib;
+    cn=cn*(1+r/12);
+    if(fireMonth===null && nw>=fire) fireMonth=mi+1;
+    if((mi+1)%3===0||mi===horizon-1){ withC.push({m:mi+1,v:nw}); coast.push({m:mi+1,v:cn}); }
+  }
+  const coastTarget=fire/Math.pow(1+r,yearsToRet);
+  const coastOK=NET_WORTH_TODAY>=coastTarget;
+  const coastAtRet=NET_WORTH_TODAY*Math.pow(1+r,yearsToRet);
+  const fmtDate=m=>new Date(2026,6+m,1).toLocaleString("en-US",{month:"short",year:"numeric"});
+  document.getElementById("nwStats").innerHTML=`
+    <div class="stat"><div class="k">Net worth today</div><div class="v sm">${fmt(NET_WORTH_TODAY)}</div></div>
+    <div class="stat"><div class="k">Coast FIRE number (today)</div><div class="v sm">${fmt(coastTarget)}</div>
+      <div class="k" style="margin-top:3px">${coastOK?`<span class="badge ok">✓ achieved</span> +${fmt(NET_WORTH_TODAY-coastTarget)}`:`<span class="badge no">not yet</span> need ${fmt(coastTarget-NET_WORTH_TODAY)}`}</div></div>
+    <div class="stat"><div class="k">Coast value at age ${retAge}</div><div class="v sm" style="color:var(--blue)">${fmt(coastAtRet)}</div><div class="k" style="margin-top:3px">today's assets alone, no new $</div></div>
+    <div class="stat"><div class="k">Full FIRE (${fmt(fire)})</div><div class="v sm" style="color:var(--green)">${fireMonth?fmtDate(fireMonth):">"+(horizon/12)+"yr"}</div>${fireMonth?`<div class="k" style="margin-top:3px">in ${(fireMonth/12).toFixed(1)} yrs · age ${Math.round(age+fireMonth/12)}</div>`:""}</div>`;
+  renderNWChart(withC, coast, fire, fireMonth, yearsToRet, retAge, horizon);
+  document.getElementById("nwLegend").innerHTML=`
+    <span><i style="background:var(--green)"></i> Net worth — saving the plan, then 4% drawdown after FIRE</span>
+    <span><i style="background:var(--blue)"></i> Coast — today's assets, zero new contributions</span>
+    <span><i style="background:var(--amber)"></i> FIRE target ${fmt(fire)}</span>`;
+  persist();
+}
+
+function renderNWChart(withC, coast, fire, fireMonth, yearsToRet, retAge, horizon){
+  const W=920,H=320,pL=64,pR=16,pT=14,pB=30;
+  const maxM=horizon;
+  const maxV=Math.max(fire, withC[withC.length-1].v, coast[coast.length-1].v)*1.06;
+  const X=m=>pL+(m/maxM)*(W-pL-pR);
+  const Y=v=>H-pB-(v/maxV)*(H-pT-pB);
+  let s="";
+  for(let i=0;i<=4;i++){const v=maxV*i/4,y=Y(v);
+    s+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="var(--line)"/>`;
+    s+=`<text x="${pL-8}" y="${y+4}" text-anchor="end" fill="var(--faint)" font-size="11">${fmt(v)}</text>`;}
+  const stepY=maxM>180?60:24;
+  for(let m=0;m<=maxM;m+=stepY){ s+=`<text x="${X(m)}" y="${H-9}" text-anchor="middle" fill="var(--faint)" font-size="11">${2026+Math.floor((6+m)/12)}</text>`;}
+  const retM=yearsToRet*12;
+  if(retM<=maxM){ s+=`<line x1="${X(retM)}" y1="${pT}" x2="${X(retM)}" y2="${H-pB}" stroke="var(--faint)" stroke-dasharray="3 3"/>`;
+    s+=`<text x="${X(retM)-4}" y="${pT+10}" text-anchor="end" fill="var(--faint)" font-size="10">age ${retAge}</text>`;}
+  s+=`<line x1="${pL}" y1="${Y(fire)}" x2="${W-pR}" y2="${Y(fire)}" stroke="${cssVar('var(--amber)')}" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=`<text x="${W-pR-4}" y="${Y(fire)-6}" text-anchor="end" fill="${cssVar('var(--amber)')}" font-size="11">FIRE ${fmt(fire)}</text>`;
+  s+=`<path d="M${coast.map(p=>`${X(p.m).toFixed(1)},${Y(p.v).toFixed(1)}`).join(" L")}" fill="none" stroke="${cssVar('var(--blue)')}" stroke-width="2" stroke-dasharray="6 4"/>`;
+  s+=`<path d="M${withC.map(p=>`${X(p.m).toFixed(1)},${Y(p.v).toFixed(1)}`).join(" L")}" fill="none" stroke="${cssVar('var(--green)')}" stroke-width="2.5"/>`;
+  if(fireMonth){const cx=X(fireMonth),cy=Y(fire);
+    s+=`<circle cx="${cx}" cy="${cy}" r="5" fill="${cssVar('var(--green)')}"/>`;
+    s+=`<text x="${cx+7}" y="${cy+15}" fill="var(--txt)" font-size="11">FIRE ${2026+Math.floor((6+fireMonth)/12)}</text>`;}
+  document.getElementById("nwChart").innerHTML=s;
+}
+["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",renderNW));
+
+document.getElementById("addDump").addEventListener("click",()=>{
+  carDumps.push({month:12, amount:5000}); renderCarSchedule(); renderCar(); renderAll();
+});
+
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  location.reload();
+});
+document.getElementById("undoBtn").addEventListener("click", undoGoals);
+
+// hover a goal bar → show that month's actual contribution (accounts vary month to month)
+(function(){
+  const rowsEl=document.getElementById("rows"), tip=document.getElementById("barTip");
+  rowsEl.addEventListener("mousemove",e=>{
+    const bar = !dragging && e.target.closest(".bar[data-key]");
+    if(!bar){ tip.style.display="none"; return; }
+    const key=bar.dataset.key, g=goalBy(key), track=bar.closest(".track");
+    const rect=track.getBoundingClientRect();
+    let mi=Math.floor((e.clientX-rect.left)/(rect.width/VIEW_MONTHS));
+    mi=Math.max(0,Math.min(VIEW_MONTHS-1,mi));
+    const amt=(lastSim && lastSim.alloc[mi]) ? (lastSim.alloc[mi][key]||0) : 0;
+    tip.innerHTML=`<div class="h">${g.name} · ${monthLabel(mi)}</div>`
+      + (amt>0 ? `<b>${fmt(amt)}</b> invested this month` : `<span class="sub2">no contribution this month</span>`);
+    tip.style.display="block";
+    const flip = e.clientX > window.innerWidth-200;
+    tip.style.left = (flip ? e.clientX - tip.offsetWidth - 14 : e.clientX + 14) + "px";
+    tip.style.top  = (e.clientY + 14) + "px";
+  });
+  rowsEl.addEventListener("mouseleave",()=>{ tip.style.display="none"; });
+})();
+document.addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="z" && !/INPUT|TEXTAREA/.test(e.target.tagName)){
+    e.preventDefault(); undoGoals();
+  }
+});
+
+// restore saved settings, then render
+loadState();
+document.querySelectorAll(".btn[data-mode]").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
+const sv=window._saved;
+if(sv){
+  [["nwReturn","nwReturn"],["nwAge","nwAge"],["nwRetAge","nwRetAge"],["nwFire","nwFire"]].forEach(([id,k])=>{
+    if(sv[k]!=null) document.getElementById(id).value = sv[k];
+  });
+}
+renderInputs(); renderFire(); renderAll(); renderCarSchedule(); renderCar(); renderAssets(); renderNW();
+</script>
