@@ -108,6 +108,7 @@
   .gridlines i.q{background:#2f3543}
   .deadline{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--pink);opacity:.7;pointer-events:none}
   .deadline.tax{background:var(--amber)}
+  .bar-warn{margin-left:auto;padding:1px 5px;font-size:13px;color:#fff;font-weight:700;background:rgba(0,0,0,.45);border-radius:4px;pointer-events:none;flex-shrink:0}
   .row{display:grid;grid-template-columns:190px 1fr 150px;align-items:center;
     gap:0;padding:5px 0;border-top:1px solid #1c2029}
   .row:first-child{border-top:none}
@@ -375,7 +376,6 @@ const DEFAULT_STATE = {
   debts: [
     { id:"debt1", name:"Honda Civic", kind:"Car loan", balance:18000, rate:0.07, payment:189, freq:"biweekly",
       dumps:[ {month:0, amount:4000, fromSavings:true}, {month:12, amount:5000, fromSavings:false} ] },
-    { id:"debt2", name:"Visa card", kind:"Credit card", balance:4500, rate:0.1999, payment:250, freq:"monthly", dumps:[] },
   ],
   assets: {
     Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
@@ -420,7 +420,11 @@ const debtMonthly = d => (d.freq==="biweekly" ? (+d.payment||0)*26/12 : (+d.paym
 const periodsPerYear = d => (d.freq==="biweekly" ? 26 : 12);
 const netWorthToday = () => Object.keys(state.assets).reduce((a,w)=>a+sumAssets(w),0) - totalDebt();
 const baseIncome = () => state.income.reduce((a,s)=>a+(+s.monthly||0),0);
-const bonusAt = mi => state.income.reduce((a,s)=>a+(s.bonuses||[]).reduce((b,x)=>b+(+x.month===mi?(+x.amount||0):0),0),0);
+const bonusAt = mi => state.income.reduce((a,s)=>a+(s.bonuses||[]).reduce((b,x)=>{
+  const start=+x.month, rep=+x.repeat||0;
+  const hits = mi===start || (rep>0 && mi>start && (mi-start)%rep===0);
+  return b+(hits?+x.amount||0:0);
+},0),0);
 const totalExpenses = () => state.expenses.reduce((a,e)=>a+(+e.amount||0),0);
 const surplusAt = mi => Math.max(0, baseIncome() + bonusAt(mi) - totalExpenses());
 
@@ -471,6 +475,17 @@ function loadState(){
 }
 // keep state self-consistent: debt defaults, and a priority list covering every goal+debt id exactly once
 function normalize(){
+  // migrate inline bonuses → standalone income sources (only from regular monthly sources)
+  const toAdd=[];
+  (state.income||[]).forEach(src=>{
+    if((src.monthly||0)===0) return;   // already a standalone bonus source — skip
+    (src.bonuses||[]).forEach(bon=>{
+      toAdd.push({id:uid("inc"),name:src.name.replace(/\s*—\s*salary$/i,"").trim()+" — bonus",
+        person:src.person,monthly:0,color:src.color,bonuses:[{month:+bon.month,amount:+bon.amount,repeat:+bon.repeat||0}]});
+    });
+    src.bonuses=[];
+  });
+  state.income.push(...toAdd);
   if(!Array.isArray(state.debts)) state.debts = structuredClone(DEFAULT_STATE.debts);
   state.debts.forEach(d=>{
     if(d.id==null) d.id=uid("debt");
@@ -518,7 +533,7 @@ function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").r
 const SIM_MONTHS = 600;   // long horizon so even low-priority debts reach payoff in the projection
 
 function simulate(){
-  const bal={}, start={}, end={}, alloc0={}, alloc=[];
+  const bal={}, start={}, end={}, alloc0={}, alloc=[], deadlineBal={};
   state.goals.forEach(g=>bal[g.id]=0);
   // per-debt running state: balance accrues interest + minimum payment each month,
   // then absorbs priority-ordered surplus (extra principal) and any scheduled dumps.
@@ -584,9 +599,10 @@ function simulate(){
       const tgt=targetAt(g,mi);
       if(bal[g.id]>=tgt-0.01){ if(end[g.id]===undefined) end[g.id]=mi; }
       else { end[g.id]=undefined; }
+      if(g.deadline!=null && mi===g.deadline) deadlineBal[g.id]=bal[g.id]||0;
     }
   }
-  return {start, end, alloc0, bal, alloc, debtState};
+  return {start, end, alloc0, bal, alloc, debtState, deadlineBal};
 }
 let lastSim = null;
 let dragging = false;
@@ -618,10 +634,10 @@ function buildSankeyModel(alloc0){
   (state.debts||[]).forEach(d=>{ if(alloc0[d.id]>0) buckets.push({id:d.id,name:d.name+" (debt payoff)",value:alloc0[d.id],color:"#5c6373"}); });
   buckets.sort((a,b)=>b.value-a.value);
   const nodes=[],links=[];
-  state.income.forEach(s=>nodes.push({id:s.id,name:s.name,value:+s.monthly||0,col:0,color:s.color}));
+  state.income.filter(s=>s.monthly>0).forEach(s=>nodes.push({id:s.id,name:s.name,value:+s.monthly||0,col:0,color:s.color}));
   const incTotal=baseIncome();
   nodes.push({id:"income",name:"Income",value:incTotal,col:1,color:"#c5cbd8"});
-  state.income.forEach(s=>links.push({source:s.id,target:"income",value:+s.monthly||0,color:s.color}));
+  state.income.filter(s=>s.monthly>0).forEach(s=>links.push({source:s.id,target:"income",value:+s.monthly||0,color:s.color}));
   const savingsTotal=buckets.reduce((a,b)=>a+b.value,0);
   nodes.push({id:"savings",name:"Savings & debt payoff",value:savingsTotal,col:2,color:"var(--green)"});
   links.push({source:"income",target:"savings",value:savingsTotal,color:"var(--green)"});
@@ -713,7 +729,7 @@ function renderInputs(){
       const d=document.createElement("div"); d.className="inp";
       d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
         <div class="inrow">
-          <input type="number" step="100" min="0" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $">
+          <input type="number" step="100" min="0" max="${Math.max(0,baseIncome()-totalExpenses())}" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $">
           <span class="x">@</span>
           <input class="mo" type="number" step="1" min="0" max="36" value="${g.startMo||0}" data-key="${id}" data-f="s" title="start month">
           <span class="hint">${monthLabel(g.startMo||0)}</span>
@@ -729,7 +745,7 @@ function renderInputs(){
       inp.addEventListener("input",e=>{
         const id=e.target.dataset.key, g=goalBy(id); if(!g) return;
         const v=+e.target.value||0;
-        if(e.target.dataset.f==="m") g.monthly=v; else g.startMo=v;
+        if(e.target.dataset.f==="m"){ const max=Math.max(0,baseIncome()-totalExpenses()); g.monthly=Math.min(v,max); e.target.value=g.monthly; } else g.startMo=v;
         if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(v);
         renderAll();
       });
@@ -739,12 +755,12 @@ function renderInputs(){
       const g=goalBy(id); if(!g) return;
       const d=document.createElement("div"); d.className="inp";
       d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
-        <input type="number" step="50" min="0" value="${g.monthly||0}" data-key="${id}" ${state.mode==="waterfall"?"disabled":""}>`;
+        <input type="number" step="50" min="0" max="${Math.max(0,baseIncome()-totalExpenses())}" value="${g.monthly||0}" data-key="${id}" ${state.mode==="waterfall"?"disabled":""}>`;
       box.appendChild(d);
     });
     box.querySelectorAll("input").forEach(inp=>{
       inp.addEventListener("focus",()=>snapState());
-      inp.addEventListener("input",e=>{ const g=goalBy(e.target.dataset.key); if(g) g.monthly=+e.target.value||0; renderAll(); });
+      inp.addEventListener("input",e=>{ const g=goalBy(e.target.dataset.key); if(!g) return; const max=Math.max(0,baseIncome()-totalExpenses()); g.monthly=Math.min(+e.target.value||0,max); e.target.value=g.monthly; renderAll(); });
     });
   }
 }
@@ -784,7 +800,7 @@ function startBarDrag(e, key, kind){
       const newDur=Math.max(1, origDur+dM);
       if(g){
         const tgt=Math.max(1, targetAt(g, VIEW_MONTHS));
-        const nm=Math.round(tgt/newDur);
+        const nm=Math.min(Math.round(tgt/newDur), Math.max(0,baseIncome()-totalExpenses()));
         if(nm!==g.monthly){ g.monthly=nm; liveUpdate(); }
       } else {
         const ex=extraForDuration(d, newDur);
@@ -853,7 +869,10 @@ function renderGantt(sim){
       const mlabel=moTxt+(g.kind==="account"&&newRoom?` · +${fmt(newRoom)} in ${monthLabel(g.roomBump.month)}`:"");
       const finishTxt=e===undefined?"after "+monthLabel(total):monthLabel(e);
       const width=Math.max(2.2, pct(eShown+1)-pct(s));
-      const barText=width>26?`<span class="amt">${moTxt}</span> <span class="dt">→ ${finishTxt}</span>`:width>11?`<span class="amt">${moTxt}</span>`:"";
+      const dlMiss=g.deadline!=null && ((sim.deadlineBal&&sim.deadlineBal[g.id])||0)<targetAt(g,g.deadline)-0.01;
+      const dlShortAmt=dlMiss?Math.ceil(targetAt(g,g.deadline)-((sim.deadlineBal&&sim.deadlineBal[g.id])||0)):0;
+      const warnBadge=dlMiss?`<span class="bar-warn" title="⚠ ${fmt(dlShortAmt)} short by ${monthLabel(g.deadline)}">⚠</span>`:"";
+      const barText=(width>26?`<span class="amt">${moTxt}</span> <span class="dt">→ ${finishTxt}</span>`:width>11?`<span class="amt">${moTxt}</span>`:"")+warnBadge;
       addRow({ id:g.id, color:g.color, barColor:cssVar(g.color), name:g.name,
         sub:`${fmt(totalSaved)} · ${mlabel}`, left:pct(s), width, arrow:clamped&&e===undefined,
         barText, canMove:custom, canResize:custom, right:`done <b>${finishTxt}</b>` });
@@ -885,9 +904,12 @@ function renderGantt(sim){
 
   // Build gantt legend dynamically
   document.getElementById("ganttLegend").innerHTML =
-    state.goals.filter(g=>g.deadline!=null).map(g=>
-      `<span><i style="background:${cssVar(g.color)}"></i> ${esc(g.name)} — ${monthLabel(g.deadline)}</span>`
-    ).join("");
+    state.goals.filter(g=>g.deadline!=null).map(g=>{
+      const tgtAtDl=targetAt(g,g.deadline), balAtDl=(sim.deadlineBal&&sim.deadlineBal[g.id])||0;
+      const dlMiss=balAtDl<tgtAtDl-0.01;
+      const shortTxt=dlMiss?` <span style="color:#fbbf24;font-weight:600">⚠ ${fmt(tgtAtDl-balAtDl)} short</span>`:"";
+      return `<span><i style="background:${cssVar(g.color)}"></i> ${esc(g.name)} — ${monthLabel(g.deadline)}${shortTxt}</span>`;
+    }).join("");
   // Build dynamic cascade-order sentence in the note
   const co=document.getElementById("cascadeOrderText");
   if(co){ const names=INVEST_ORDER().map(k=>goalBy(k)?.name).filter(Boolean);
@@ -1255,53 +1277,56 @@ function renderSetup(){
   // ── INCOME ──
   const sec2 = sec("Income sources");
   state.income.forEach((src,si)=>{
-    const srcDiv = el("div","");
-    srcDiv.style.cssText="margin-bottom:10px;padding:8px;background:var(--card2);border-radius:8px;border:1px solid var(--line)";
-    const topRow = el("div","src-row");
-    topRow.innerHTML=`<input type="text" class="nm" value="${esc(src.name)}" placeholder="Source name" data-si="${si}" data-f="name">
-      <select data-si="${si}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===src.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
-      $<input type="number" class="amt" step="100" min="0" value="${src.monthly}" data-si="${si}" data-f="monthly">
-      <button class="del" data-si="${si}" data-f="del" title="Remove source">×</button>`;
-    topRow.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
+    const isBonus = src.monthly===0 && (src.bonuses||[]).length>0;
+    const row = el("div","src-row");
+    if(isBonus){
+      const bon=src.bonuses[0];
+      const rep=+bon.repeat||0;
+      row.innerHTML=`<input type="text" class="nm" value="${esc(src.name)}" placeholder="Bonus name" data-si="${si}" data-f="name">
+        <select data-si="${si}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===src.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
+        $<input type="number" class="bamount" step="500" min="0" value="${bon.amount}" data-si="${si}" data-f="bamount">
+        in mo<input type="number" class="bmo" step="1" min="0" max="72" value="${bon.month}" data-si="${si}" data-f="bmonth">
+        <span class="hint" style="color:var(--faint);font-size:10px">(${monthLabel(bon.month)})</span>
+        <label style="font-size:11px;color:var(--muted)">repeats every</label>
+        <input type="number" class="bmo" step="1" min="0" placeholder="—" value="${rep||""}" data-si="${si}" data-f="brepeat" title="Repeat interval in months (blank = one-time)">
+        <label style="font-size:11px;color:var(--muted)">mo</label>
+        <button class="del" data-si="${si}" title="Remove">×</button>`;
+    } else {
+      row.innerHTML=`<input type="text" class="nm" value="${esc(src.name)}" placeholder="Source name" data-si="${si}" data-f="name">
+        <select data-si="${si}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===src.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
+        $<input type="number" class="amt" step="100" min="0" value="${src.monthly}" data-si="${si}" data-f="monthly">
+        /mo
+        <button class="del" data-si="${si}" title="Remove">×</button>`;
+    }
+    row.querySelectorAll("input,select").forEach(inp=>{
       const ev=inp.type==="number"?"input":"change";
-      inp.addEventListener(ev,e=>{ const si2=+e.target.dataset.si, f=e.target.dataset.f; if(f==="del") return;
-        if(!state.income[si2]) return;
-        state.income[si2][f] = f==="monthly"?(+e.target.value||0):e.target.value;
-        applyAndRender(); });
+      inp.addEventListener(ev,e=>{
+        const s=state.income[+e.target.dataset.si]; if(!s) return;
+        const f=e.target.dataset.f;
+        if(f==="name") s.name=e.target.value;
+        else if(f==="person") s.person=e.target.value;
+        else if(f==="monthly") s.monthly=+e.target.value||0;
+        else if(f==="bamount"){ if(s.bonuses[0]) s.bonuses[0].amount=+e.target.value||0; }
+        else if(f==="bmonth"){
+          if(s.bonuses[0]) s.bonuses[0].month=+e.target.value||0;
+          const hint=e.target.parentElement.querySelector(".hint"); if(hint) hint.textContent=`(${monthLabel(+e.target.value||0)})`;
+        }
+        else if(f==="brepeat"){ if(s.bonuses[0]) s.bonuses[0].repeat=+e.target.value>0?+e.target.value:0; }
+        applyAndRender();
+      });
     });
-    topRow.querySelector(".del").addEventListener("click",()=>{
+    row.querySelector(".del").addEventListener("click",()=>{
       snapState(); state.income.splice(si,1); renderSetup(); applyAndRender();
     });
-    srcDiv.appendChild(topRow);
-    const bonLabel=el("div",""); bonLabel.style.cssText="font-size:11px;color:var(--muted);margin:6px 0 2px";
-    bonLabel.textContent="Bonuses (one-time, by month index):";
-    srcDiv.appendChild(bonLabel);
-    (src.bonuses||[]).forEach((bon,bi)=>{
-      const brow=el("div","bonus-row");
-      brow.innerHTML=`$<input type="number" class="bamount" step="500" min="0" value="${bon.amount}" data-si="${si}" data-bi="${bi}" data-f="amount">
-        in mo<input type="number" class="bmo" step="1" min="0" max="72" value="${bon.month}" data-si="${si}" data-bi="${bi}" data-f="month">
-        <span style="color:var(--faint);font-size:10px">(${monthLabel(bon.month)})</span>
-        <button class="del" data-si="${si}" data-bi="${bi}" data-f="bdel" title="Remove bonus">×</button>`;
-      brow.querySelectorAll("input[data-f]").forEach(inp=>{
-        inp.addEventListener("input",e=>{
-          const si2=+e.target.dataset.si, bi2=+e.target.dataset.bi, f=e.target.dataset.f;
-          if(state.income[si2]&&state.income[si2].bonuses[bi2]) state.income[si2].bonuses[bi2][f]=+e.target.value||0;
-          applyAndRender();
-        });
-      });
-      brow.querySelector(".del").addEventListener("click",()=>{
-        snapState(); state.income[si].bonuses.splice(bi,1); renderSetup(); applyAndRender();
-      });
-      srcDiv.appendChild(brow);
-    });
-    const addBon=el("button","addbtn"); addBon.style="margin-top:4px;font-size:11.5px;padding:4px 10px"; addBon.textContent="+ Add bonus";
-    addBon.addEventListener("click",()=>{ snapState(); state.income[si].bonuses.push({month:6,amount:1000}); renderSetup(); applyAndRender(); });
-    srcDiv.appendChild(addBon);
-    sec2.appendChild(srcDiv);
+    sec2.appendChild(row);
   });
+  const addBtns=el("div",""); addBtns.style="display:flex;gap:8px;margin-top:4px";
   const addSrc=el("button","addbtn"); addSrc.textContent="+ Add income source";
   addSrc.addEventListener("click",()=>{ snapState(); state.income.push({id:uid("inc"),name:"New income",person:state.people[0],monthly:0,color:"var(--amber)",bonuses:[]}); renderSetup(); applyAndRender(); });
-  sec2.appendChild(addSrc);
+  const addBon=el("button","addbtn"); addBon.textContent="+ Add one-time bonus";
+  addBon.addEventListener("click",()=>{ snapState(); state.income.push({id:uid("inc"),name:state.people[0]+" — bonus",person:state.people[0],monthly:0,color:"var(--amber)",bonuses:[{month:6,amount:1000}]}); renderSetup(); applyAndRender(); });
+  addBtns.appendChild(addSrc); addBtns.appendChild(addBon);
+  sec2.appendChild(addBtns);
   body.appendChild(sec2);
 
   // ── EXPENSES ──
@@ -1335,10 +1360,10 @@ function renderSetup(){
       <label style="font-size:11px;color:var(--muted)">Target:$</label>
       <input type="number" class="tgt" step="1000" min="0" value="${g.target}" data-gi="${gi}" data-f="target">
       ${g.kind==="lifestyle"?`<label style="font-size:11px;color:var(--muted)">$/mo:</label>
-        <input type="number" class="mo" step="100" min="0" value="${g.monthly}" data-gi="${gi}" data-f="monthly">`:""}
+        <input type="number" class="mo" step="100" min="0" max="${Math.max(0,baseIncome()-totalExpenses())}" value="${g.monthly}" data-gi="${gi}" data-f="monthly">`:""}
       <label style="font-size:11px;color:var(--muted)">Start mo:</label>
       <input type="number" class="mo" step="1" min="0" max="60" value="${g.startMo||0}" data-gi="${gi}" data-f="startMo">
-      <label style="font-size:11px;color:var(--muted)">DL:</label>
+      <label style="font-size:11px;color:var(--muted)">Deadline:</label>
       <input type="number" class="dl" step="1" min="0" max="60" value="${g.deadline!=null?g.deadline:""}" placeholder="—" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
       ${g.kind==="account"?`<select data-gi="${gi}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===g.person?"selected":""}>${esc(p)}</option>`).join("")}</select>`:""}
       <input type="color" value="${resolvedColor}" data-gi="${gi}" data-f="color" title="Color" style="width:32px;height:28px;padding:2px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid var(--line)">
@@ -1354,7 +1379,8 @@ function renderSetup(){
           if(e.target.value==="account" && !g2.person) g2.person=state.people[0];
           renderSetup(); applyAndRender(); return;   // all goals already live in state.priority
         }
-        else if(f==="target"||f==="monthly"||f==="startMo") g2[f]=+e.target.value||0;
+        else if(f==="monthly"){ const max=Math.max(0,baseIncome()-totalExpenses()); g2.monthly=Math.min(+e.target.value||0,max); e.target.value=g2.monthly; }
+        else if(f==="target"||f==="startMo") g2[f]=+e.target.value||0;
         else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
         else if(f==="color") g2.color=e.target.value;
         else if(f==="person") g2.person=e.target.value;
@@ -1409,8 +1435,6 @@ function renderSetup(){
     row.querySelectorAll(".fo-btn").forEach(b=>b.addEventListener("click",e=>movePriority(it.id, e.target.dataset.dir)));
     sec5.appendChild(row);
   });
-  body.appendChild(sec5);
-
   // ── DEBTS (any kind: car loan, credit card, …) ──
   const sec6=sec("Debts");
   (state.debts||[]).forEach((d,di)=>{
@@ -1458,6 +1482,7 @@ function renderSetup(){
   });
   sec6.appendChild(addD);
   body.appendChild(sec6);
+  body.appendChild(sec5);
 
   // ── ASSETS ──
   const sec7=sec("Assets");
@@ -1539,13 +1564,39 @@ function initSetupToggle(){
       const bar=!dragging&&e.target.closest(".bar[data-key]");
       if(!bar){ tip.style.display="none"; return; }
       const key=bar.dataset.key, g=goalBy(key), track=bar.closest(".track");
-      if(!g){ tip.style.display="none"; return; }
+      const isDebt=!g&&(state.debts||[]).some(d=>d.id===key);
+      if(!g&&!isDebt){ tip.style.display="none"; return; }
       const rect=track.getBoundingClientRect();
       let mi=Math.floor((e.clientX-rect.left)/(rect.width/VIEW_MONTHS));
       mi=Math.max(0,Math.min(VIEW_MONTHS-1,mi));
       const amt=(lastSim&&lastSim.alloc[mi])?(lastSim.alloc[mi][key]||0):0;
-      tip.innerHTML=`<div class="h">${esc(g.name)} · ${monthLabel(mi)}</div>`
-        +(amt>0?`<b>${fmt(amt)}</b> invested this month`:`<span class="sub2">no contribution this month</span>`);
+      const debt=(state.debts||[]).find(d=>d.id===key);
+      const label=g?esc(g.name):debt?esc(debt.name):key;
+      const bonusThisMo=bonusAt(mi);
+      let body;
+      if(debt){
+        const ds=lastSim&&lastSim.debtState&&lastSim.debtState[key];
+        const curve=ds&&ds.curve;
+        const balEntry=curve&&curve.find(p=>p.m===mi+1);
+        const balAfter=balEntry?balEntry.bal:(ds?ds.bal:null);
+        const minPmt=debt?debtMonthly(debt):0;
+        const extra=amt>0?amt:0;
+        body=`<b>${fmt(minPmt)}</b> minimum payment`+(extra>0?` + <b>${fmt(extra)}</b> extra paydown`:"")
+          +(balAfter!=null?`<br><span class="sub2">balance after: ${fmt(balAfter)}</span>`:"");
+      } else {
+        const dlMissTip=g&&g.deadline!=null&&((lastSim.deadlineBal&&lastSim.deadlineBal[key])||0)<targetAt(g,g.deadline)-0.01;
+        const dlShortTip=dlMissTip?Math.ceil(targetAt(g,g.deadline)-((lastSim.deadlineBal&&lastSim.deadlineBal[key])||0)):0;
+        const totalAvail=surplusAt(mi);
+        const bonusSrcs=bonusThisMo>0?state.income.filter(s=>(s.bonuses||[]).some(x=>{const start=+x.month,rep=+x.repeat||0;return mi===start||(rep>0&&mi>start&&(mi-start)%rep===0);})):[];
+        const bonusDesc=bonusSrcs.map(s=>s.name+(+s.bonuses[0].repeat>0?" (recurring)":"")).join(", ");
+        const surplusLine=bonusThisMo>0
+          ?`<span class="sub2">${fmt(baseIncome()-totalExpenses())} base + ${fmt(bonusThisMo)} bonus${bonusDesc?` (${bonusDesc})`:""} = <b>${fmt(totalAvail)}</b> available this month</span>`
+          :`<span class="sub2">${fmt(totalAvail)} available this month</span>`;
+        body=(amt>0?`<b>${fmt(amt)}</b> invested this month`:`<span class="sub2">no contribution this month</span>`)
+          +(dlMissTip?`<br><span style="color:#fbbf24;font-weight:600">⚠ ${fmt(dlShortTip)} short by ${monthLabel(g.deadline)}</span>`:"")
+          +`<br>${surplusLine}`;
+      }
+      tip.innerHTML=`<div class="h">${label} · ${monthLabel(mi)}</div>`+body;
       tip.style.display="block";
       const flip=e.clientX>window.innerWidth-200;
       tip.style.left=(flip?e.clientX-tip.offsetWidth-14:e.clientX+14)+"px";
