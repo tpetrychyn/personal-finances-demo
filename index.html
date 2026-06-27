@@ -793,17 +793,23 @@ function labelFor(mode){
 function renderInputs(){
   const box=document.getElementById("inputs"); box.innerHTML="";
   document.getElementById("inputsLabel").innerHTML = labelFor(state.mode);
+  const netSurplus=Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums());
   if(state.mode==="custom"){
+    let budgetLeft=netSurplus;
     LIFESTYLE().forEach(id=>{
       const g=goalBy(id); if(!g) return;
+      const maxMo=budgetLeft;
+      const actualStart=lastSim&&lastSim.start[id]!=null?lastSim.start[id]:null;
+      const hintTxt=monthLabel(g.startMo||0);
       const d=document.createElement("div"); d.className="inp";
       d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
         <div class="inrow">
-          <input type="number" step="100" min="0" max="${Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums())}" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $">
+          <input type="number" step="1" min="0" max="${maxMo}" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $ (max ${fmt(maxMo)} after higher-priority goals)">
           <span class="x">@</span>
-          <input class="mo" type="number" step="1" min="0" max="36" value="${g.startMo||0}" data-key="${id}" data-f="s" title="start month">
-          <span class="hint">${monthLabel(g.startMo||0)}</span>
+          <input class="mo" type="number" step="1" min="${actualStart??0}" max="${VIEW_MONTHS}" value="${g.startMo||0}" data-key="${id}" data-f="s" title="start month">
+          <span class="hint">${hintTxt}</span>
         </div>`;
+      budgetLeft=Math.max(0,budgetLeft-(g.monthly||0));
       box.appendChild(d);
     });
     const casc=document.createElement("div"); casc.className="inp cascade";
@@ -814,23 +820,31 @@ function renderInputs(){
       inp.addEventListener("focus", ()=>snapState());
       inp.addEventListener("input",e=>{
         const id=e.target.dataset.key, g=goalBy(id); if(!g) return;
-        const v=+e.target.value||0;
-        if(e.target.dataset.f==="m"){ const max=Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums()); g.monthly=Math.min(v,max); e.target.value=g.monthly; } else g.startMo=v;
-        if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(v);
+        const v=Math.round(+e.target.value||0);
+        if(e.target.dataset.f==="m"){ const max=+e.target.max||0; g.monthly=Math.min(v,max); e.target.value=g.monthly; }
+        else { const minMo=+e.target.min||0; g.startMo=Math.max(minMo,Math.min(v,VIEW_MONTHS)); e.target.value=g.startMo; }
+        if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(g.startMo);
         renderAll();
       });
     });
   } else {
+    let budgetLeft=netSurplus;
     LIFESTYLE().forEach(id=>{
       const g=goalBy(id); if(!g) return;
+      const maxMo=budgetLeft;
       const d=document.createElement("div"); d.className="inp";
       d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
-        <input type="number" step="50" min="0" max="${Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums())}" value="${g.monthly||0}" data-key="${id}" ${state.mode==="waterfall"?"disabled":""}>`;
+        <input type="number" step="1" min="0" max="${maxMo}" value="${g.monthly||0}" data-key="${id}" ${state.mode==="waterfall"?"disabled":""}>`;
+      budgetLeft=Math.max(0,budgetLeft-(g.monthly||0));
       box.appendChild(d);
     });
     box.querySelectorAll("input").forEach(inp=>{
       inp.addEventListener("focus",()=>snapState());
-      inp.addEventListener("input",e=>{ const g=goalBy(e.target.dataset.key); if(!g) return; const max=Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums()); g.monthly=Math.min(+e.target.value||0,max); e.target.value=g.monthly; renderAll(); });
+      inp.addEventListener("input",e=>{
+        const g=goalBy(e.target.dataset.key); if(!g) return;
+        const v=Math.round(+e.target.value||0), max=+e.target.max||0;
+        g.monthly=Math.min(v,max); e.target.value=g.monthly; renderAll();
+      });
     });
   }
 }
@@ -1179,7 +1193,7 @@ function renderDumpRows(box, di){
     box.appendChild(row);
   });
   box.querySelectorAll("input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
-    state.debts[di].dumps[+e.target.dataset.i][e.target.dataset.f]=+e.target.value||0;
+    state.debts[di].dumps[+e.target.dataset.i][e.target.dataset.f]=Math.round(+e.target.value||0);
     if(e.target.dataset.f==="month") e.target.parentElement.querySelector(".hint").textContent=carDt(+e.target.value||0);
     refreshDebt(di); renderAll();   // light refresh keeps input focus; gantt+sankey reflect dumps
   }));
@@ -1377,10 +1391,10 @@ function renderSetup(){
         const f=e.target.dataset.f;
         if(f==="name") s.name=e.target.value;
         else if(f==="person") s.person=e.target.value;
-        else if(f==="monthly") s.monthly=+e.target.value||0;
-        else if(f==="bamount"){ if(s.bonuses[0]) s.bonuses[0].amount=+e.target.value||0; }
+        else if(f==="monthly") s.monthly=Math.round(+e.target.value||0);
+        else if(f==="bamount"){ if(s.bonuses[0]) s.bonuses[0].amount=Math.round(+e.target.value||0); }
         else if(f==="bmonth"){
-          if(s.bonuses[0]) s.bonuses[0].month=+e.target.value||0;
+          if(s.bonuses[0]) s.bonuses[0].month=Math.round(+e.target.value||0);
           const hint=e.target.parentElement.querySelector(".hint"); if(hint) hint.textContent=`(${monthLabel(+e.target.value||0)})`;
         }
         else if(f==="brepeat"){ if(s.bonuses[0]) s.bonuses[0].repeat=+e.target.value>0?+e.target.value:0; }
@@ -1413,7 +1427,7 @@ function renderSetup(){
       </select>
       <button class="del" data-ei="${ei}" title="Remove">×</button>`;
     row.querySelector("input[data-f='name']").addEventListener("change",e=>{ state.expenses[+e.target.dataset.ei].name=e.target.value; applyAndRender(); });
-    row.querySelector("input[data-f='amount']").addEventListener("input",e=>{ state.expenses[+e.target.dataset.ei].amount=+e.target.value||0; applyAndRender(); });
+    row.querySelector("input[data-f='amount']").addEventListener("input",e=>{ state.expenses[+e.target.dataset.ei].amount=Math.round(+e.target.value||0); applyAndRender(); });
     row.querySelector("select[data-f='cat']").addEventListener("change",e=>{ state.expenses[+e.target.dataset.ei].cat=e.target.value; applyAndRender(); });
     row.querySelector(".del").addEventListener("click",()=>{ snapState(); state.expenses.splice(ei,1); renderSetup(); applyAndRender(); });
     sec3.appendChild(row);
@@ -1457,7 +1471,7 @@ function renderSetup(){
           renderSetup(); applyAndRender(); return;   // all goals already live in state.priority
         }
         else if(f==="monthly"){ const max=Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums()); g2.monthly=Math.min(+e.target.value||0,max); e.target.value=g2.monthly; }
-        else if(f==="target"||f==="startMo") g2[f]=+e.target.value||0;
+        else if(f==="target"||f==="startMo") g2[f]=Math.round(+e.target.value||0);
         else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
         else if(f==="color") g2.color=e.target.value;
         else if(f==="person") g2.person=e.target.value;
@@ -1535,7 +1549,7 @@ function renderSetup(){
         const i=+e.target.dataset.di, f=e.target.dataset.f, d2=state.debts[i]; if(!d2) return;
         if(f==="name"||f==="kind"||f==="freq") d2[f]=e.target.value;
         else if(f==="rate") d2.rate=(+e.target.value||0)/100;
-        else d2[f]=+e.target.value||0;
+        else d2[f]=Math.round(+e.target.value||0);
         if(f==="freq"||f==="kind"){ renderSetup(); }
         applyAndRender();
       });
@@ -1577,7 +1591,7 @@ function renderSetup(){
         state.assets[state.people[+e.target.dataset.who]][+e.target.dataset.ai][0]=e.target.value; applyAndRender();
       });
       row.querySelector("input[data-f='val']").addEventListener("input",e=>{
-        state.assets[state.people[+e.target.dataset.who]][+e.target.dataset.ai][1]=+e.target.value||0; applyAndRender();
+        state.assets[state.people[+e.target.dataset.who]][+e.target.dataset.ai][1]=Math.round(+e.target.value||0); applyAndRender();
       });
       row.querySelector(".del").addEventListener("click",e=>{
         snapState(); state.assets[who].splice(+e.target.dataset.ai,1); renderSetup(); applyAndRender();
@@ -1702,7 +1716,7 @@ syncNWInputs();
 
 ["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",e=>{
   const map={nwReturn:"returnPct",nwAge:"age",nwRetAge:"retireAge",nwFire:"target"};
-  state.fire[map[id]]=+e.target.value||0;
+  state.fire[map[id]]=Math.round(+e.target.value||0);
   renderNW();
 }));
 
@@ -1735,9 +1749,9 @@ document.getElementById("sankeyNext").addEventListener("click",()=>{
 renderSetup();
 renderHeaderStats();
 renderSankeyNote();
-renderInputs();
 renderFire();
 renderAll();
+renderInputs();
 renderDebts();
 renderAssets();
 renderNW();
