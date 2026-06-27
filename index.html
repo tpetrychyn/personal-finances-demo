@@ -1104,12 +1104,7 @@ function wireRowReorder(rows){
 }
 
 //============ FIRE ============
-function renderFire(){
-  const surplus=baseIncome()-totalExpenses();
-  if(surplus<=0){ document.getElementById("fireYears").textContent="—"; return; }
-  const yrs=state.fire.target/(Math.max(1,surplus)*12);
-  document.getElementById("fireYears").textContent=yrs.toFixed(1)+" yr";
-}
+function renderFire(){} // fireYears stat updated by renderNW() using the projection result
 
 //============ RENDER ALL ============
 function renderAll(){
@@ -1323,6 +1318,8 @@ function renderNW(){
   const coastOK=nwToday>=coastTarget;
   const coastAtRet=nwToday*Math.pow(1+r,yearsToRet);
   const fmtDate=m=>new Date(2026,6+m,1).toLocaleString("en-US",{month:"short",year:"numeric"});
+  const fyEl=document.getElementById("fireYears");
+  if(fyEl) fyEl.textContent=fireMonth?(fireMonth/12).toFixed(1)+" yr":">"+(horizon/12)+"yr";
   document.getElementById("nwStats").innerHTML=`
     <div class="stat"><div class="k">Net worth today</div><div class="v sm">${fmt(nwToday)}</div></div>
     <div class="stat"><div class="k">Coast FIRE number (today)</div><div class="v sm">${fmt(coastTarget)}</div>
