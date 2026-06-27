@@ -22,6 +22,10 @@
   .stat .v.sm{font-size:18px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
     padding:22px 24px;margin-bottom:24px}
+  .sankey-nav{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .sankey-nav button{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1;padding:0}
+  .sankey-nav button:hover{background:var(--line)}
+  .sankey-nav .mo-lbl{font-size:13px;color:var(--muted);min-width:58px;text-align:center}
   .cardhead{display:flex;justify-content:space-between;align-items:flex-start;
     flex-wrap:wrap;gap:14px;margin-bottom:8px}
   .note{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--amber);
@@ -240,7 +244,12 @@
   <div class="card">
     <div class="cardhead">
       <div><h2>Where the money goes</h2>
-      <p class="sub">Two-tier flow: income sources → income pool → expenses + the savings bucket → funding goals (current month allocation).</p></div>
+      <p class="sub">Income → expenses, debt payoff, and savings. Use ‹ › to browse months.</p></div>
+      <div class="sankey-nav">
+        <button id="sankeyPrev">‹</button>
+        <span class="mo-lbl" id="sankeyMonthLbl">—</span>
+        <button id="sankeyNext">›</button>
+      </div>
     </div>
     <div class="budget-widget" id="budgetWidget"></div>
     <div class="sankey"><svg id="sankey" viewBox="0 0 1300 780" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -346,7 +355,7 @@ const DEFAULT_STATE = {
   meta: { asOf: "June 2026", startYear: 2026, startMonth: 6, viewMonths: 24, setupOpen: false },
   people: ["Bob", "Sally"],
   income: [
-    { id:"inc1", name:"Bob — salary",    person:"Bob",   monthly:4800, color:"var(--blue)",   bonuses:[{month:6, amount:8000}] },
+    { id:"inc1", name:"Bob — salary",    person:"Bob",   monthly:4800, color:"var(--blue)",   bonuses:[] },
     { id:"inc2", name:"Sally — salary",  person:"Sally", monthly:3400, color:"var(--indigo)", bonuses:[] },
     { id:"inc3", name:"Sally — side gig",person:"Sally", monthly:300,  color:"var(--violet)", bonuses:[] },
   ],
@@ -356,29 +365,24 @@ const DEFAULT_STATE = {
     { id:"ex3",  name:"Discretionary",  amount:500,  cat:"guilt" },
     { id:"ex5",  name:"Utilities",      amount:300,  cat:"fixed" },
     { id:"ex6",  name:"Property Tax",   amount:300,  cat:"fixed" },
-    { id:"ex7",  name:"Travel",         amount:250,  cat:"guilt" },
     { id:"ex8",  name:"Gas",            amount:220,  cat:"fixed" },
     { id:"ex9",  name:"Car Insurance",  amount:160,  cat:"fixed" },
     { id:"ex10", name:"Home Insurance", amount:130,  cat:"fixed" },
-    { id:"ex11", name:"Phone",          amount:110,  cat:"fixed" },
-    { id:"ex12", name:"Internet",       amount:80,   cat:"fixed" },
+    { id:"ex11", name:"Phone & Internet", amount:190,  cat:"fixed" },
+    { id:"ex12", name:"Eating out",      amount:200,  cat:"guilt" },
   ],
   goals: [
     { id:"emergency", kind:"lifestyle", name:"Emergency fund", target:15000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:null, person:null, roomBump:null },
     { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:20000, monthly:2000, startMo:0,  color:"var(--pink)",   deadline:10,   person:null, roomBump:null },
-    { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:null, person:null, roomBump:null },
-    { id:"furniture", kind:"lifestyle", name:"Furniture",      target:5000,  monthly:800,  startMo:11, color:"var(--violet)", deadline:null, person:null, roomBump:null },
-    { id:"homerepair",kind:"lifestyle", name:"Home repairs",   target:8000,  monthly:1000, startMo:16, color:"#b45309",       deadline:null, person:null, roomBump:null },
+    { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:24,   person:null, roomBump:null },
     { id:"carfund",   kind:"lifestyle", name:"Next-car fund",  target:10000, monthly:800,  startMo:16, color:"#eab308",       deadline:null, person:null, roomBump:null },
-    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:18000, monthly:0,    startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
-    { id:"rrsp_t27",  kind:"account",  name:"Bob RRSP '27",   target:9000,  monthly:0,    startMo:6,  color:"#16a34a",       deadline:20,   person:"Bob",   roomBump:null },
-    { id:"rrsp_e",    kind:"account",  name:"Sally RRSP",      target:0,     monthly:0,    startMo:0,  color:"#15803d",       deadline:null, person:"Sally", roomBump:{month:6, amount:8000} },
-    { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, person:"Bob",   roomBump:{month:6, amount:7000} },
-    { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, person:"Sally", roomBump:{month:6, amount:7000} },
+    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:8000,  monthly:0,    startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
+    { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, person:"Bob",   roomBump:null },
+    { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, person:"Sally", roomBump:null },
   ],
   // single priority list across ALL goals — top = funded first; raising a goal's
   // monthly amount eats into the surplus left for everything below it.
-  priority: ["emergency","wedding","vacation","furniture","homerepair","carfund","rrsp_t26","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"],
+  priority: ["wedding","rrsp_t26","emergency","vacation","carfund","tfsa_t","tfsa_e"],
   // any kind of debt: car loan, credit card, student loan, line of credit, …
   debts: [
     { id:"debt1", name:"Honda Civic", kind:"Car loan", balance:18000, rate:0.07, payment:189, freq:"biweekly",
@@ -495,6 +499,9 @@ function normalize(){
   });
   state.income.push(...toAdd);
   (state.expenses||[]).forEach(ex=>{ if(!ex.cat) ex.cat="fixed"; });
+  // sync roomBump to null for goals whose default no longer has one
+  const _dgMap=new Map(DEFAULT_STATE.goals.map(g=>[g.id,g]));
+  (state.goals||[]).forEach(g=>{ const dg=_dgMap.get(g.id); if(dg&&dg.roomBump===null) g.roomBump=null; });
   if(!Array.isArray(state.debts)) state.debts = structuredClone(DEFAULT_STATE.debts);
   state.debts.forEach(d=>{
     if(d.id==null) d.id=uid("debt");
@@ -610,13 +617,14 @@ function simulate(){
       const tgt=targetAt(g,mi);
       if(bal[g.id]>=tgt-0.01){ if(end[g.id]===undefined) end[g.id]=mi; }
       else { end[g.id]=undefined; }
-      if(g.deadline!=null && mi===g.deadline) deadlineBal[g.id]=bal[g.id]||0;
+      if(g.deadline!=null && mi===g.deadline-1) deadlineBal[g.id]=bal[g.id]||0;
     }
   }
   return {start, end, alloc0, bal, alloc, debtState, deadlineBal};
 }
 let lastSim = null;
 let dragging = false;
+let sankeyMonth = 0;
 
 //============ HEADER STATS ============
 function renderHeaderStats(){
@@ -662,13 +670,19 @@ function renderSankeyNote(){
 }
 
 //============ SANKEY ============
-function buildSankeyModel(alloc0){
+function buildSankeyModel(alloc0, mi=0){
   const nodes=[],links=[];
   // col 0 + col 1: income sources → income pool
+  const bonusMi=bonusAt(mi);
   state.income.filter(s=>s.monthly>0).forEach(s=>nodes.push({id:s.id,name:s.name,value:+s.monthly||0,col:0,color:s.color}));
-  const incTotal=baseIncome();
+  if(bonusMi>0){
+    const bonusSrcs=state.income.filter(s=>s.monthly===0&&(s.bonuses||[]).some(x=>{const st=+x.month,r=+x.repeat||0;return mi===st||(r>0&&mi>st&&(mi-st)%r===0);}));
+    bonusSrcs.forEach(s=>nodes.push({id:s.id+"_b",name:s.name,value:bonusMi/Math.max(1,bonusSrcs.length),col:0,color:s.color}));
+  }
+  const incTotal=baseIncome()+bonusMi;
   nodes.push({id:"income",name:"Income",value:incTotal,col:1,color:"#c5cbd8"});
   state.income.filter(s=>s.monthly>0).forEach(s=>links.push({source:s.id,target:"income",value:+s.monthly||0,color:s.color}));
+  if(bonusMi>0){ const bonusSrcs=nodes.filter(n=>n.col===0&&n.id.endsWith("_b")); bonusSrcs.forEach(n=>links.push({source:n.id,target:"income",value:n.value,color:n.color})); }
 
   // col 2 → col 3: Savings (goals)
   const goalBuckets=state.goals.filter(g=>alloc0[g.id]>0)
@@ -709,8 +723,9 @@ function buildSankeyModel(alloc0){
   return {nodes,links};
 }
 
-function renderSankey(alloc0){
-  const {nodes,links} = buildSankeyModel(alloc0);
+function renderSankey(alloc0, mi=0){
+  const lbl=document.getElementById("sankeyMonthLbl"); if(lbl) lbl.textContent=monthLabel(mi);
+  const {nodes,links} = buildSankeyModel(alloc0, mi);
   const W=1300,H=780, mL=150, mR=255, mT=22, mB=22, nodeW=18, pad=9;
   const cols=[0,1,2,3];
   const colNodes = cols.map(c=>nodes.filter(n=>n.col===c));
@@ -921,7 +936,8 @@ function renderGantt(sim){
       const avgMo=funded/Math.max(1,eShown-s+1);
       const paced=(g.kind==="lifestyle")||(g.monthly>0);   // shows a fixed $/mo vs an absorbed ~avg
       const moTxt=paced?`${fmt(g.monthly||0)}/mo`:`~${fmt(avgMo)}/mo`;
-      const mlabel=moTxt+(g.kind==="account"&&newRoom?` · +${fmt(newRoom)} in ${monthLabel(g.roomBump.month)}`:"");
+      const isLeftover=g.kind==="account";
+      const mlabel=isLeftover?"":moTxt;
       const finishTxt=e===undefined?"after "+monthLabel(total):monthLabel(e);
       const width=Math.max(2.2, pct(eShown+1)-pct(s));
       const dlMiss=g.deadline!=null && ((sim.deadlineBal&&sim.deadlineBal[g.id])||0)<targetAt(g,g.deadline)-0.01;
@@ -1038,7 +1054,7 @@ function renderFire(){
 //============ RENDER ALL ============
 function renderAll(){
   const sim=simulate();
-  renderSankey(sim.alloc0);
+  renderSankey(sim.alloc[sankeyMonth]||{}, sankeyMonth);
   renderGantt(sim);
   renderHeaderStats();
   renderBudgetWidget();
@@ -1710,6 +1726,12 @@ document.addEventListener("keydown",e=>{
 });
 
 initSetupToggle();
+document.getElementById("sankeyPrev").addEventListener("click",()=>{
+  if(sankeyMonth>0){ sankeyMonth--; if(lastSim) renderSankey(lastSim.alloc[sankeyMonth]||{}, sankeyMonth); }
+});
+document.getElementById("sankeyNext").addEventListener("click",()=>{
+  if(sankeyMonth<VIEW_MONTHS-1){ sankeyMonth++; if(lastSim) renderSankey(lastSim.alloc[sankeyMonth]||{}, sankeyMonth); }
+});
 renderSetup();
 renderHeaderStats();
 renderSankeyNote();
