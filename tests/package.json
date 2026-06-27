@@ -1,0 +1,12 @@
+{
+  "name": "finances-demo-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless smoke tests for ../index.html (jsdom). Dev-only; the app itself ships with zero dependencies.",
+  "scripts": {
+    "test": "node smoke.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

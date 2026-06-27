@@ -97,7 +97,7 @@
   .badge.ok{background:rgba(74,222,128,.15);color:var(--green)}
   .badge.no{background:rgba(248,113,113,.15);color:var(--red)}
   /* gantt */
-  .gantt{margin-top:8px;--gl:190px;--gr:150px}  /* left/right label-column widths, for gridline alignment */
+  .gantt{margin-top:8px;--gl:190px;--gr:150px}
   .axis{display:grid;font-size:11px;color:var(--faint);margin:0 0 6px;
     grid-template-columns:190px 1fr 150px}
   .axis .months{position:relative;height:16px}
@@ -126,6 +126,8 @@
   .bartip b{font-variant-numeric:tabular-nums}
   .bartip .sub2{color:var(--faint);font-size:11px}
   .bar.draggable{cursor:grab}
+  .bar.resizebody{cursor:ew-resize}
+  .bar.resizebody:hover{filter:brightness(1.12)}
   .bar.draggable:hover{filter:brightness(1.08)}
   .rz{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize;
     border-radius:0 6px 6px 0;background:rgba(0,0,0,.18)}
@@ -136,39 +138,111 @@
   .legend2 span{display:flex;align-items:center;gap:6px}
   .legend2 i{width:14px;height:3px;border-radius:2px;display:inline-block}
   a{color:var(--blue)}
+  /* setup panel */
+  .setup-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0;margin-bottom:24px}
+  .setup-toggle{width:100%;background:none;border:none;color:var(--txt);font:inherit;font-size:15px;font-weight:600;
+    padding:18px 24px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-radius:16px}
+  .setup-toggle:hover{background:rgba(255,255,255,.03)}
+  .setup-body{padding:0 24px 24px;display:flex;flex-direction:column;gap:22px}
+  .setup-section h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px}
+  .setup-section{border-top:1px solid var(--line);padding-top:16px}
+  .setup-section:first-child{border-top:none;padding-top:0}
+  .person-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .person-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px;width:140px}
+  .src-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .src-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  .src-row input.nm{width:160px}
+  .src-row input.amt{width:84px}
+  .exp-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .exp-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  .exp-row input.nm{width:160px}
+  .exp-row input.amt{width:84px}
+  .goal-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:8px;background:var(--card2);border-radius:8px;border:1px solid var(--line)}
+  .goal-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:5px 7px;font:inherit;font-size:12px}
+  .goal-row input.nm{width:130px}
+  .goal-row input.tgt{width:74px}
+  .goal-row input.mo{width:60px}
+  .goal-row input.dl{width:46px}
+  .goal-row select{font-size:12px;padding:5px 7px}
+  .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+  .del:hover{color:var(--red)}
+  .fo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .fo-row .chip{cursor:default}
+  .fo-btn{background:var(--card2);border:1px solid var(--line);color:var(--muted);border-radius:5px;padding:2px 8px;cursor:pointer;font-size:12px}
+  .fo-btn:hover{color:var(--txt)}
+  .asset-edit-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .asset-edit-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  .asset-edit-row input.nm{width:150px}
+  .asset-edit-row input.amt{width:90px}
+  .bonus-row{display:flex;align-items:center;gap:5px;margin:4px 0 4px 8px;font-size:12px;color:var(--muted)}
+  .bonus-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:4px 7px;font:inherit;font-size:12px}
+  .bonus-row input.bamount{width:80px}
+  .bonus-row input.bmo{width:46px}
+  .setup-io{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .setup-io textarea{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:8px;font:inherit;font-size:12px;width:100%;height:80px;resize:vertical;margin-top:6px}
+  /* funding priority (drag to reorder) */
+  .prio-row{display:flex;align-items:center;gap:9px;margin-bottom:5px;padding:7px 10px;background:var(--card2);border:1px solid var(--line);border-radius:8px}
+  .prio-row.dragging{opacity:.4}
+  .prio-row.drop-above{box-shadow:inset 0 2px 0 var(--blue)}
+  .prio-row.drop-below{box-shadow:inset 0 -2px 0 var(--blue)}
+  .prio-row .grip{cursor:grab;color:var(--faint);font-size:14px;user-select:none}
+  .prio-row .prio-name{flex:1;font-size:13px}
+  .prio-row .prio-kind{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);border:1px solid var(--line);border-radius:20px;padding:1px 8px}
+  /* debts editor + cards */
+  .debt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .debt-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  .debt-row input.nm{width:140px}
+  .debt-row input.num{width:80px}
+  .debt-row select{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;font-size:12px;padding:6px 8px}
+  .debt-block{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px;background:var(--card2)}
+  .debt-block h3{margin:0 0 3px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .debt-block .dbsub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+  /* drag handle on gantt goal rows */
+  .gl-grip{cursor:grab;color:var(--faint);font-size:13px;user-select:none}
+  .row.drop-above{box-shadow:inset 0 2px 0 var(--blue)}
+  .row.drop-below{box-shadow:inset 0 -2px 0 var(--blue)}
 </style>
 
 <div class="wrap">
   <header>
-    <h1>Household Cashflow & Funding Plan</h1>
+    <h1>Household Cashflow &amp; Funding Plan</h1>
     <p class="sub">Bob &amp; Sally · monthly basis · as of June 2026</p>
   </header>
 
+  <!-- Setup card inserted before stats -->
+  <div class="setup-card" id="setupCard">
+    <button class="setup-toggle" id="setupToggle">
+      <span>⚙ Setup / Edit inputs</span>
+      <span id="setupChevron">▾</span>
+    </button>
+    <div class="setup-body" id="setupBody" style="display:none">
+      <!-- populated by renderSetup() -->
+    </div>
+  </div>
+
   <div class="stats">
-    <div class="stat"><div class="k">Monthly income</div><div class="v">$8,500</div></div>
-    <div class="stat"><div class="k">Living + car pmt</div><div class="v">$5,410</div></div>
-    <div class="stat"><div class="k">Free to deploy / mo</div><div class="v" style="color:var(--green)">$3,090</div></div>
-    <div class="stat"><div class="k">FIRE target</div><div class="v sm">$1,250,000</div></div>
+    <div class="stat"><div class="k">Monthly income</div><div class="v" id="statIncome">—</div></div>
+    <div class="stat"><div class="k">Living + car pmt</div><div class="v" id="statExpenses">—</div></div>
+    <div class="stat"><div class="k">Free to deploy / mo</div><div class="v" id="statFree" style="color:var(--green)">—</div></div>
+    <div class="stat"><div class="k">FIRE target</div><div class="v sm" id="statFireTarget">—</div></div>
     <div class="stat"><div class="k">Yrs to FIRE*</div><div class="v sm" id="fireYears">—</div></div>
   </div>
 
-  <!-- ================= SANKEY ================= -->
+  <!-- SANKEY card -->
   <div class="card">
     <div class="cardhead">
       <div><h2>Where the money goes</h2>
       <p class="sub">Two-tier flow: income sources → income pool → expenses + the savings bucket → funding goals (current month allocation).</p></div>
     </div>
     <div class="sankey"><svg id="sankey" viewBox="0 0 1300 780" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <div class="note">
-      <b>How to read this:</b> the car payment ($189 biweekly ≈ <b>$410/mo</b>) is a real expense, leaving a deployable surplus of <b>$3,090/mo</b> to split across goals. The $18k car loan carries <b>7.0% interest</b> — bulk-payoff scheduling is in the car card below.
-    </div>
+    <div class="note" id="sankeyNote"></div>
   </div>
 
-  <!-- ================= GANTT ================= -->
+  <!-- GANTT card -->
   <div class="card">
     <div class="cardhead">
-      <div><h2>Funding goals & timelines</h2>
-      <p class="sub">Each bar shows when a goal is actively funded until it's fully paid. In <b>Custom</b> mode, <b>drag a lifestyle bar to move its start month</b>, or <b>drag its right edge to change the $/mo</b> (longer = smaller payments). Accounts (RRSP/TFSA) fill from whatever's left.</p></div>
+      <div><h2>Funding goals &amp; timelines</h2>
+      <p class="sub">Every goal <b>and debt</b> shares one priority list — top = funded first. <b>Drag the ⠿ grip to reprioritize</b> (drag a debt up to pay it off aggressively). In <b>Custom</b> mode, <b>drag a bar to move/pace it</b>: goals move (start month) and resize ($/mo); debts resize to set payoff speed. Accounts fill from whatever's left unless you cap them.</p></div>
     </div>
 
     <div class="controls">
@@ -202,45 +276,29 @@
     </div>
     <div id="barTip" class="bartip"></div>
 
-    <div class="legend2">
-      <span><i style="background:var(--green)"></i> Bob RRSP '26 deadline — Mar 2027 (2026 refund)</span>
-      <span><i style="background:var(--pink)"></i> Wedding — May 2027</span>
-      <span><i style="background:#16a34a"></i> Bob RRSP '27 deadline — Mar 2028 (2027 refund)</span>
-    </div>
+    <div class="legend2" id="ganttLegend"></div>
     <div class="note">
-      <b>Accounts are per person.</b> Leftover cash each month cascades in this fixed order: <b>Bob RRSP '26 → Bob RRSP '27 → Sally RRSP → Bob TFSA → Sally TFSA</b>. Bob's RRSP is split by tax year: the <b>$18,000 of 2026 room must be filled by ~Mar 1 2027</b> to claim the 2026 refund; the <b>$9,000 of new 2027 room</b> opens in Jan 2027 and has until ~Mar 2028 for the 2027 refund. Sally's RRSP room ($8k) also only opens in 2027. Vertical lines mark these deadlines.<br><br>
+      <b>Accounts are per person.</b> Leftover cash each month cascades into your savings/registered accounts in this order: <b id="cascadeOrderText">—</b>. Reorder it under <b>Setup → Funding cascade order</b>. A goal can carry a <b>deadline</b> (e.g. an RRSP tax-year cutoff) — shown as a vertical line — and a one-time <b>room bump</b> (new contribution room unlocking on a set month). Vertical lines mark deadlines.<br><br>
       <b>Three strategies:</b> <b>Parallel</b> — lifestyle goals take fixed monthly slices, accounts absorb the rest. <b>Waterfall</b> — one goal at a time in priority order. <b>Custom (phased, shown)</b> — set each lifestyle goal's monthly $ <i>and</i> a start month (e.g. RRSP + wedding now, vacation/furniture deferred); the accounts soak up whatever's left. Bulk car dumps (car card) come off that month's surplus — except ones flagged "existing cash" like Sally's $4k, which don't.<br><br>
       The <b>~$5k RRSP refund</b> arriving spring 2027 isn't modeled in the bars; routing it to the car loan or a TFSA pulls finish lines in. *FIRE estimate ignores investment growth — purely savings ÷ target, so the real timeline is faster.
     </div>
   </div>
 
-  <!-- ================= CAR LUMP-SUM ================= -->
+  <!-- DEBTS card -->
   <div class="card">
     <div class="cardhead">
-      <div><h2>Honda Civic loan — $18,000 @ 7.0%</h2>
-      <p class="sub">This debt actually costs money. Paying it down is a <b>guaranteed, risk-free 7.0% return</b> — higher than your ~6% investment assumption, so a lump sum here is often your best-value dollar. Try one below.</p></div>
+      <div><h2 id="debtCardTitle">Debts</h2>
+      <p class="sub">Any debt — car loan, credit card, student loan, line of credit — costs money. Paying it down is a <b>guaranteed, risk-free return</b> at the debt's interest rate, often beating (and safer than) investing. Schedule lump-sum payoffs below to see the interest saved. Add or edit debts in <b>Setup → Debts</b>.</p></div>
     </div>
 
-    <div class="controls">
-      <div style="min-width:300px">
-        <div class="ctl-lbl">Bulk dump schedule — these draw from your monthly surplus</div>
-        <div class="dumps" id="carDumpRows"></div>
-        <button class="addbtn" id="addDump">+ Add a dump</button>
-      </div>
-    </div>
-
-    <div class="stats" id="carStats"></div>
-
-    <h2 style="font-size:14px;margin:22px 0 2px">Loan balance over time</h2>
-    <p class="sub">Amber = minimum payments only. Green = with your scheduled dumps. The gap closes the loan sooner and skips the interest in between.</p>
-    <svg id="carChart" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid meet" style="margin-top:6px"></svg>
+    <div id="debtBlocks"></div>
 
     <div class="note">
-      <b>Decision rule:</b> a dollar against this loan earns a <b>guaranteed 7.0%</b>; the same dollar in your TFSA earns ~6% <i>and isn’t guaranteed</i>. So on a risk-adjusted basis the car loan usually wins — it’s arguably a higher priority than topping up the TFSA. <b>Opportune times</b> = whenever a goal finishes and frees cash, or any windfall like the spring-2027 RRSP refund — there’s no penalty for early payoff, and every month carried costs ~7.0%/yr. Dumps are wired into the goal timeline above, so you can see what each one costs your investing pace that month.
+      <b>Decision rule:</b> a dollar against a debt earns a <b>guaranteed</b> return equal to its rate; the same dollar invested earns ~6% <i>and isn't guaranteed</i>. So high-rate debt (credit cards especially) is usually your best-value dollar — arguably ahead of topping up a TFSA. <b>Opportune times</b> to dump: whenever a goal finishes and frees cash, or any windfall — there's no penalty for early payoff, and every month carried keeps costing the rate. Surplus-funded dumps are wired into the goal timeline above, so you can see what each one costs your investing pace that month.
     </div>
   </div>
 
-  <!-- ================= NET WORTH & FIRE ================= -->
+  <!-- NET WORTH & FIRE card -->
   <div class="card">
     <div class="cardhead">
       <div><h2>Net worth &amp; FIRE projection</h2>
@@ -254,7 +312,7 @@
         <div class="ctl-lbl">Assumptions (edit freely)</div>
         <div class="inputs">
           <div class="inp"><label>Return %/yr (nominal)</label><input id="nwReturn" type="number" step="0.5" value="6"></div>
-          <div class="inp"><label>Bob age now</label><input id="nwAge" type="number" step="1" value="34"></div>
+          <div class="inp"><label id="nwAgeLabel">Age now</label><input id="nwAge" type="number" step="1" value="34"></div>
           <div class="inp"><label>Coast retire age</label><input id="nwRetAge" type="number" step="1" value="60"></div>
           <div class="inp"><label>FIRE target</label><input id="nwFire" type="number" step="10000" value="1250000"></div>
         </div>
@@ -267,209 +325,312 @@
     <div class="legend2" id="nwLegend"></div>
 
     <div class="note">
-      <b>Coast FIRE</b> = the point where your invested assets are big enough that, <i>even if you never contribute another dollar</i>, normal market growth carries them to your FIRE number by your retirement age. Once you cross it, work/saving becomes optional — you’re just “coasting.” <b>Full FIRE</b> = the portfolio actually reaching your target (here $1.25M, ~4% withdrawal ≈ $50k/yr). After Full FIRE the line models a 4%/yr drawdown, so it roughly plateaus.<br><br>
-      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); Bob’s age is a guess — set it and the retire age for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
+      <b>Coast FIRE</b> = the point where your invested assets are big enough that, <i>even if you never contribute another dollar</i>, normal market growth carries them to your FIRE number by your retirement age. Once you cross it, work/saving becomes optional — you're just "coasting." <b>Full FIRE</b> = the portfolio actually reaching your target (here $1.25M, ~4% withdrawal ≈ $50k/yr). After Full FIRE the line models a 4%/yr drawdown, so it roughly plateaus.<br><br>
+      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); Bob's age is a guess — set it and the retire age for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
     </div>
   </div>
 </div>
 
 <script>
-//============ DATA ============
-const INCOME = [
-  {id:"bob", name:"Bob — salary", value:4800, color:"var(--blue)"},
-  {id:"sallyS", name:"Sally — salary", value:3400, color:"var(--indigo)"},
-  {id:"sallyB", name:"Sally — side gig", value:300, color:"var(--violet)"},
-];
-const EXPENSES = [
-  {name:"Mortgage", value:2100},
-  {name:"Groceries", value:850},
-  {name:"Discretionary", value:500},
-  {name:"Car Payment", value:410},
-  {name:"Utilities", value:300},
-  {name:"Property Tax", value:300},
-  {name:"Travel", value:250},
-  {name:"Gas", value:220},
-  {name:"Car Insurance", value:160},
-  {name:"Home Insurance", value:130},
-  {name:"Phone", value:110},
-  {name:"Internet", value:80},
-];
-const SURPLUS = 3090; // 8,500 income − 5,410 living+car expenses
-
-// ── Registered-account room, per person ──────────────────────────────
-// Sally's RRSP + both TFSAs grow with 2027 room (one-time bump at month 6).
-// Bob's RRSP is split into two goals (below) with their own tax deadlines.
-const ROOM_2026 = {
-  rrsp_e: 0,                // Sally: no 2026 RRSP room
-  tfsa_t: 22000,            // Bob TFSA
-  tfsa_e: 15000,            // Sally TFSA
+//============ DEFAULT STATE & STATE ============
+const DEFAULT_STATE = {
+  meta: { asOf: "June 2026", startYear: 2026, startMonth: 6, viewMonths: 24, setupOpen: false },
+  people: ["Bob", "Sally"],
+  income: [
+    { id:"inc1", name:"Bob — salary",    person:"Bob",   monthly:4800, color:"var(--blue)",   bonuses:[{month:6, amount:8000}] },
+    { id:"inc2", name:"Sally — salary",  person:"Sally", monthly:3400, color:"var(--indigo)", bonuses:[] },
+    { id:"inc3", name:"Sally — side gig",person:"Sally", monthly:300,  color:"var(--violet)", bonuses:[] },
+  ],
+  expenses: [
+    { id:"ex1",  name:"Mortgage",       amount:2100 },
+    { id:"ex2",  name:"Groceries",      amount:850  },
+    { id:"ex3",  name:"Discretionary",  amount:500  },
+    { id:"ex4",  name:"Car Payment",    amount:410  },
+    { id:"ex5",  name:"Utilities",      amount:300  },
+    { id:"ex6",  name:"Property Tax",   amount:300  },
+    { id:"ex7",  name:"Travel",         amount:250  },
+    { id:"ex8",  name:"Gas",            amount:220  },
+    { id:"ex9",  name:"Car Insurance",  amount:160  },
+    { id:"ex10", name:"Home Insurance", amount:130  },
+    { id:"ex11", name:"Phone",          amount:110  },
+    { id:"ex12", name:"Internet",       amount:80   },
+  ],
+  goals: [
+    { id:"emergency", kind:"lifestyle", name:"Emergency fund", target:15000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:null, person:null, roomBump:null },
+    { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:20000, monthly:2000, startMo:0,  color:"var(--pink)",   deadline:10,   person:null, roomBump:null },
+    { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:null, person:null, roomBump:null },
+    { id:"furniture", kind:"lifestyle", name:"Furniture",      target:5000,  monthly:800,  startMo:11, color:"var(--violet)", deadline:null, person:null, roomBump:null },
+    { id:"homerepair",kind:"lifestyle", name:"Home repairs",   target:8000,  monthly:1000, startMo:16, color:"#b45309",       deadline:null, person:null, roomBump:null },
+    { id:"carfund",   kind:"lifestyle", name:"Next-car fund",  target:10000, monthly:800,  startMo:16, color:"#eab308",       deadline:null, person:null, roomBump:null },
+    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:18000, monthly:0,    startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
+    { id:"rrsp_t27",  kind:"account",  name:"Bob RRSP '27",   target:9000,  monthly:0,    startMo:6,  color:"#16a34a",       deadline:20,   person:"Bob",   roomBump:null },
+    { id:"rrsp_e",    kind:"account",  name:"Sally RRSP",      target:0,     monthly:0,    startMo:0,  color:"#15803d",       deadline:null, person:"Sally", roomBump:{month:6, amount:8000} },
+    { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, person:"Bob",   roomBump:{month:6, amount:7000} },
+    { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, person:"Sally", roomBump:{month:6, amount:7000} },
+  ],
+  // single priority list across ALL goals — top = funded first; raising a goal's
+  // monthly amount eats into the surplus left for everything below it.
+  priority: ["emergency","wedding","vacation","furniture","homerepair","carfund","rrsp_t26","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"],
+  // any kind of debt: car loan, credit card, student loan, line of credit, …
+  debts: [
+    { id:"debt1", name:"Honda Civic", kind:"Car loan", balance:18000, rate:0.07, payment:189, freq:"biweekly",
+      dumps:[ {month:0, amount:4000, fromSavings:true}, {month:12, amount:5000, fromSavings:false} ] },
+    { id:"debt2", name:"Visa card", kind:"Credit card", balance:4500, rate:0.1999, payment:250, freq:"monthly", dumps:[] },
+  ],
+  assets: {
+    Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
+    Sally: [["Chequing",2500],["Savings",6000],["TFSA",16000],["RRSP (work pension)",22000]],
+  },
+  fire: { target:1250000, returnPct:6, age:34, retireAge:60 },
+  mode: "custom",
 };
-// new room unlocking Jan 2027 (month index 6)
-const NEW_ROOM_MONTH = 6;
-const NEW_2027 = { rrsp_e:8000, tfsa_t:7000, tfsa_e:7000 };
-const targetAt = (g, mi) =>
-  (g.key in ROOM_2026) ? ROOM_2026[g.key] + (mi>=NEW_ROOM_MONTH ? NEW_2027[g.key] : 0) : g.target;
+let state = structuredClone(DEFAULT_STATE);
+// collision-free id generator (counter guarantees uniqueness even on same-ms rapid adds)
+let _uid = 0;
+const uid = p => p + "_" + (++_uid) + "_" + Date.now();
 
-const GOAL_DEFS = [
-  {key:"emergency", name:"Emergency fund", target:15000, monthly:1000, color:"var(--orange)"},
-  {key:"wedding",   name:"Wedding",        target:20000, monthly:2000, color:"var(--pink)", deadline:10},
-  {key:"vacation",  name:"Vacation",       target:6000,  monthly:800,  color:"var(--sky)"},
-  {key:"furniture", name:"Furniture",      target:5000,  monthly:800,  color:"var(--violet)"},
-  {key:"homerepair",name:"Home repairs",   target:8000,  monthly:1000, color:"#b45309"},
-  {key:"carfund",   name:"Next-car fund",  target:10000, monthly:800,  color:"#eab308"},
-  // Bob RRSP 2026 room — fill by Mar 2027 (mo 8) to claim the 2026 refund
-  {key:"rrsp_t26", name:"Bob RRSP '26", target:18000, invest:true, who:"Bob", color:"var(--green)", deadline:8},
-  // Bob RRSP 2027 room — opens Jan 2027 (mo 6), fill by Mar 2028 (mo 20) for the 2027 refund
-  {key:"rrsp_t27", name:"Bob RRSP '27", target:9000, invest:true, who:"Bob", color:"#16a34a", start:6, deadline:20},
-  {key:"rrsp_e", name:"Sally RRSP",  target:ROOM_2026.rrsp_e, invest:true, who:"Sally",  color:"#15803d"},
-  {key:"tfsa_t", name:"Bob TFSA",   target:ROOM_2026.tfsa_t, invest:true, who:"Bob",   color:"#34d399"},
-  {key:"tfsa_e", name:"Sally TFSA", target:ROOM_2026.tfsa_e, invest:true, who:"Sally", color:"#2dd4bf"},
-];
-const LIFESTYLE = ["emergency","wedding","vacation","furniture","homerepair","carfund"];
-// registered accounts absorb leftover cash, in this priority order:
-// Bob RRSP '26 → '27 → Sally RRSP → Bob TFSA → Sally TFSA
-const INVEST_ORDER = ["rrsp_t26","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"];
-// waterfall: strict one-goal-at-a-time order
-const WF_ORDER = ["emergency","wedding","rrsp_t26","carfund","vacation","furniture","homerepair","rrsp_t27","rrsp_e","tfsa_t","tfsa_e"];
-
-const CAR_LOAN = {balance:18000, biweekly:189, rate:0.07, monthly:189*26/12}; // ~$410/mo @ 7.0%
-
-// currently-held assets per person (for the net-worth projection)
-const ASSETS = {
-  Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
-  Sally: [["Chequing",2500],["Savings",6000],["TFSA",16000],["RRSP (work pension)",22000]],
-};
-const sumAssets = who => ASSETS[who].reduce((a,[,v])=>a+v,0);
-const NET_WORTH_TODAY = sumAssets("Bob") + sumAssets("Sally") - CAR_LOAN.balance;
-
-let mode = "custom";
-// lifestyle goals: monthly cap + start month (start months only used in custom mode)
-let monthly = {emergency:1000, wedding:2000, vacation:800, furniture:800, homerepair:1000, carfund:800};
-let startMo = {emergency:0,    wedding:0,    vacation:11,  furniture:11,  homerepair:16,    carfund:16};
-// one-time bulk principal dumps at the car loan.
-// fromSavings:true = paid from existing cash, so it does NOT reduce the monthly surplus.
-let carDumps = [
-  {month:0,  amount:4000, fromSavings:true},  // Sally's $4k already saved & ready
-  {month:12, amount:5000},                    // a later dump funded from surplus
-];
-
-//============ UNDO (funding-goal amounts & start months) ============
-let goalHistory = [], goalPending = null;
-const goalSnap = () => ({ monthly:{...monthly}, startMo:{...startMo} });
-function markGoalPending(){ goalPending = goalSnap(); }           // capture pre-edit state
-function commitGoalPending(){                                     // push it once a real change lands
-  if(goalPending){ goalHistory.push(goalPending); if(goalHistory.length>100) goalHistory.shift(); goalPending=null; updateUndoBtn(); }
+//============ DERIVED HELPERS ============
+const goalBy = k => state.goals.find(g=>g.id===k);
+const debtBy = k => (state.debts||[]).find(d=>d.id===k);
+// ONE priority-ordered list of fundable items — goals AND debts. Top = funded first.
+// A debt placed high absorbs surplus as extra principal (aggressive payoff); placed low,
+// it just gets minimum payments + any scheduled dumps. Robust to ids missing/stale in state.priority.
+function orderedItems(){
+  const gm=new Map(state.goals.map(g=>[g.id,{type:"goal",id:g.id,obj:g}]));
+  const dm=new Map((state.debts||[]).map(d=>[d.id,{type:"debt",id:d.id,obj:d}]));
+  const seen=new Set(), out=[];
+  (state.priority||[]).forEach(id=>{
+    if(seen.has(id)) return;
+    if(gm.has(id)){ seen.add(id); out.push(gm.get(id)); }
+    else if(dm.has(id)){ seen.add(id); out.push(dm.get(id)); }
+  });
+  state.goals.forEach(g=>{ if(!seen.has(g.id)){ seen.add(g.id); out.push(gm.get(g.id)); } });
+  (state.debts||[]).forEach(d=>{ if(!seen.has(d.id)){ seen.add(d.id); out.push(dm.get(d.id)); } });
+  return out;
 }
+const orderedGoals = () => orderedItems().filter(it=>it.type==="goal").map(it=>it.obj);
+const priorityIds = () => orderedItems().map(it=>it.id);
+const LIFESTYLE = () => orderedGoals().filter(g=>g.kind==="lifestyle").map(g=>g.id);
+const INVEST_ORDER = () => orderedGoals().filter(g=>g.kind==="account").map(g=>g.id);
+const targetAt = (g, mi) => (+g.target||0) + (g.roomBump && mi>=(+g.roomBump.month||0) ? (+g.roomBump.amount||0) : 0);
+const sumAssets = who => (state.assets[who]||[]).reduce((a,[,v])=>a+(+v||0),0);
+const totalDebt = () => (state.debts||[]).reduce((a,d)=>a+(+d.balance||0),0);
+// equivalent monthly payment for a debt regardless of its payment frequency
+const debtMonthly = d => (d.freq==="biweekly" ? (+d.payment||0)*26/12 : (+d.payment||0));
+const periodsPerYear = d => (d.freq==="biweekly" ? 26 : 12);
+const netWorthToday = () => Object.keys(state.assets).reduce((a,w)=>a+sumAssets(w),0) - totalDebt();
+const baseIncome = () => state.income.reduce((a,s)=>a+(+s.monthly||0),0);
+const bonusAt = mi => state.income.reduce((a,s)=>a+(s.bonuses||[]).reduce((b,x)=>b+(+x.month===mi?(+x.amount||0):0),0),0);
+const totalExpenses = () => state.expenses.reduce((a,e)=>a+(+e.amount||0),0);
+const surplusAt = mi => Math.max(0, baseIncome() + bonusAt(mi) - totalExpenses());
+
+//============ UNDO ============
+let undoStack = [];
+function snapState(){ undoStack.push(structuredClone(state)); if(undoStack.length>100) undoStack.shift(); updateUndoBtn(); }
 function undoGoals(){
-  if(!goalHistory.length) return;
-  const s = goalHistory.pop();
-  monthly = {...s.monthly}; startMo = {...s.startMo}; goalPending = null;
-  renderInputs(); renderAll(); renderNW(); updateUndoBtn();
+  if(!undoStack.length) return;
+  state = undoStack.pop(); updateUndoBtn();
+  syncNWInputs();
+  renderSetup(); renderInputs(); renderAll(); renderNW(); renderDebts(); renderAssets();
 }
-function updateUndoBtn(){ const b=document.getElementById("undoBtn"); if(b) b.disabled = goalHistory.length===0; }
+function updateUndoBtn(){ const b=document.getElementById("undoBtn"); if(b) b.disabled=undoStack.length===0; }
 
-//============ PERSISTENCE (localStorage) ============
-const STORAGE_KEY = "finplan_demo_v1";
+//============ PERSISTENCE ============
+const STORAGE_KEY = "finplan_demo_v2";
 function persist(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      mode, monthly, startMo, carDumps,
-      nwReturn: document.getElementById("nwReturn")?.value,
-      nwAge: document.getElementById("nwAge")?.value,
-      nwRetAge: document.getElementById("nwRetAge")?.value,
-      nwFire: document.getElementById("nwFire")?.value,
-    }));
-  }catch(e){/* storage unavailable (e.g. private mode) — ignore */}
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+// deep-merge saved over defaults (arrays replaced wholesale, objects merged) — so new
+// fields keep their defaults while the user's edits win.
+function deepMerge(def, saved){
+  if(typeof def !== "object" || def===null || Array.isArray(def)) return saved !== undefined ? saved : def;
+  const r = structuredClone(def);
+  for(const k of Object.keys(saved||{})){ r[k] = deepMerge(def[k], saved[k]); }
+  return r;
 }
 function loadState(){
-  let s; try{ s = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){ return; }
+  let s; try{ s=JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){ return; }
   if(!s) return;
-  if(s.mode) mode = s.mode;
-  if(s.monthly) Object.assign(monthly, s.monthly);
-  if(s.startMo) Object.assign(startMo, s.startMo);
-  if(Array.isArray(s.carDumps)) carDumps = s.carDumps;
-  window._saved = s; // net-worth input values applied after the DOM/vars exist
+  state = deepMerge(structuredClone(DEFAULT_STATE), s);
+  // migrate older saved shapes (single `car` + `fundingOrder`/`waterfallOrder`)
+  if(s.car && !s.debts){
+    state.debts = [{ id:uid("debt"), name:s.car.name||"Loan", kind:"Car loan",
+      balance:+s.car.balance||0, rate:+s.car.rate||0, payment:+s.car.biweekly||0, freq:"biweekly",
+      dumps:Array.isArray(s.car.dumps)?s.car.dumps:[] }];
+  }
+  if(!s.priority){
+    // rebuild a single priority list: lifestyle goals (in goal order) → accounts (old fundingOrder) → debts
+    const ids=state.goals.map(g=>g.id);
+    const life=state.goals.filter(g=>g.kind==="lifestyle").map(g=>g.id);
+    const accts=Array.isArray(s.fundingOrder)?s.fundingOrder.filter(id=>ids.includes(id)):state.goals.filter(g=>g.kind==="account").map(g=>g.id);
+    state.priority=[...life, ...accts, ...(state.debts||[]).map(d=>d.id)];
+  }
+  // old schema (pre-debts/priority) detected → adopt the new default for the setup panel
+  if(s.car || s.fundingOrder || !s.priority) state.meta.setupOpen = false;
+  delete state.car; delete state.fundingOrder; delete state.waterfallOrder;
+}
+// keep state self-consistent: debt defaults, and a priority list covering every goal+debt id exactly once
+function normalize(){
+  if(!Array.isArray(state.debts)) state.debts = structuredClone(DEFAULT_STATE.debts);
+  state.debts.forEach(d=>{
+    if(d.id==null) d.id=uid("debt");
+    if(d.payment==null && d.biweekly!=null){ d.payment=d.biweekly; d.freq=d.freq||"biweekly"; }
+    if(!d.freq) d.freq="monthly";
+    if(!d.kind) d.kind="Loan";
+    if(!Array.isArray(d.dumps)) d.dumps=[];
+  });
+  const validIds = new Set([...state.goals.map(g=>g.id), ...state.debts.map(d=>d.id)]);
+  const seen=new Set();
+  let p=(Array.isArray(state.priority)?state.priority:[]).filter(id=> validIds.has(id) && !seen.has(id) && seen.add(id));
+  state.goals.forEach(g=>{ if(!seen.has(g.id)){ seen.add(g.id); p.push(g.id); } });
+  state.debts.forEach(d=>{ if(!seen.has(d.id)){ seen.add(d.id); p.push(d.id); } });
+  state.priority = p;
 }
 
 //============ HELPERS ============
 const fmt = n => "$"+Math.round(n).toLocaleString();
 const cssVar = v => v.startsWith("var(") ? getComputedStyle(document.documentElement).getPropertyValue(v.slice(4,-1)).trim() : v;
-const START = {y:2026, m:6}; // July 2026 = index 0
+// normalize any color (css var / rgb()) to a #rrggbb hex string a <input type=color> accepts
+const toHex = c => {
+  let v = cssVar(c).trim();
+  if(/^#[0-9a-f]{6}$/i.test(v)) return v.toLowerCase();
+  if(/^#[0-9a-f]{3}$/i.test(v)) return ("#"+v.slice(1).split("").map(x=>x+x).join("")).toLowerCase();
+  const m = v.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if(m) return "#"+[m[1],m[2],m[3]].map(n=>(+n).toString(16).padStart(2,"0")).join("");
+  return "#60a5fa"; // fallback
+};
+const START = {y:2026, m:6};
 function monthLabel(i){
   const d = new Date(START.y, START.m+i, 1);
   return d.toLocaleString("en-US",{month:"short"})+" '"+String(d.getFullYear()).slice(2);
 }
-const VIEW_MONTHS = 24; // Jul'26 → Jul'28
+const VIEW_MONTHS = 24;
+
+// DOM helper functions used in renderSetup
+function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function sec(title){
+  const d=document.createElement("div"); d.className="setup-section";
+  const h=document.createElement("h3"); h.textContent=title; d.appendChild(h); return d;
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
 
 //============ SIMULATION ============
-const goalBy = k => GOAL_DEFS.find(g=>g.key===k);
-// dumps that draw from the monthly surplus (existing-cash dumps don't)
-const carDumpSurplusAt = mi => carDumps.reduce((a,d)=> a + ((+d.month===mi && !d.fromSavings)?(+d.amount||0):0), 0);
+const SIM_MONTHS = 600;   // long horizon so even low-priority debts reach payoff in the projection
 
 function simulate(){
   const bal={}, start={}, end={}, alloc0={}, alloc=[];
-  GOAL_DEFS.forEach(g=>bal[g.key]=0);
-  // build the ordered fund list: lifestyle goals (capped) then registered accounts (absorb remainder)
-  let order;
-  if(mode==="waterfall"){
-    order = WF_ORDER.map(k=>({...goalBy(k), cap:Infinity, start:0}));
-  } else {
-    const life = LIFESTYLE.map(k=>({...goalBy(k), cap:(monthly[k]||0), start: mode==="custom"?(startMo[k]||0):0}));
-    const inv  = INVEST_ORDER.map(k=>({...goalBy(k), cap:Infinity, start:(goalBy(k).start||0)}));
-    order = [...life, ...inv];
-  }
-  for(let mi=0; mi<72; mi++){
-    let avail = Math.max(0, SURPLUS - carDumpSurplusAt(mi)); // surplus-funded car dumps come off the top
-    const a = {}; alloc[mi] = a;                              // per-month, per-goal allocation
-    for(const g of order){
-      if(mi < (g.start||0)) continue;
-      const tgt = targetAt(g, mi);
-      if(bal[g.key] >= tgt-0.01 || avail<=0) continue;
-      const c = Math.min(g.cap, tgt-bal[g.key], avail);
-      if(c<=0) continue;
-      if(start[g.key]===undefined) start[g.key]=mi;
-      if(mi===0) alloc0[g.key]=(alloc0[g.key]||0)+c;
-      a[g.key] = (a[g.key]||0) + c;
-      bal[g.key]+=c; avail-=c;
+  state.goals.forEach(g=>bal[g.id]=0);
+  // per-debt running state: balance accrues interest + minimum payment each month,
+  // then absorbs priority-ordered surplus (extra principal) and any scheduled dumps.
+  const debtState={};
+  (state.debts||[]).forEach(d=>{
+    debtState[d.id] = { bal:+d.balance||0, interest:0, payoff:null,
+      rm:(+d.rate||0)/12, pm:debtMonthly(d), curve:[{m:0,bal:+d.balance||0}] };
+  });
+  // priority order, every mode. Waterfall = no caps. Otherwise lifestyle goals capped at
+  // their monthly $, accounts + debts absorb whatever's left — strictly in priority order.
+  const order = orderedItems().map(it=>{
+    if(it.type==="goal"){
+      const g=it.obj, wf=state.mode==="waterfall";
+      // every goal can be paced by a monthly cap: lifestyle uses its `monthly`; an account
+      // uses `monthly` too when set (>0), otherwise it absorbs whatever's left.
+      const cap = wf ? Infinity : (g.kind==="lifestyle" ? (g.monthly||0) : (g.monthly>0 ? g.monthly : Infinity));
+      const start = (state.mode==="parallel" && g.kind==="lifestyle") ? 0 : (g.startMo||0);
+      return {type:"goal", g, cap, start};
     }
-    // record/clear completion against this month's (possibly grown) target
-    for(const g of GOAL_DEFS){
-      const tgt = targetAt(g, mi);
-      if(bal[g.key] >= tgt-0.01){ if(end[g.key]===undefined) end[g.key]=mi; }
-      else { end[g.key]=undefined; }
+    // debts absorb surplus up to their optional monthly extra-payment cap (default: unlimited)
+    return {type:"debt", id:it.id, cap:(it.obj.extra==null?Infinity:Math.max(0,+it.obj.extra||0))};
+  });
+
+  for(let mi=0; mi<SIM_MONTHS; mi++){
+    let avail = Math.max(0, surplusAt(mi));
+    const a = {}; alloc[mi] = a;
+    // 1) advance every debt: interest + minimum payment, then one-time scheduled dumps
+    (state.debts||[]).forEach(d=>{
+      const ds=debtState[d.id]; if(ds.bal<=0.01) return;
+      const intr=ds.bal*ds.rm; ds.interest+=intr; ds.bal=Math.max(0, ds.bal+intr-ds.pm);
+      (d.dumps||[]).forEach(x=>{
+        if(+x.month!==mi) return;
+        const amt=+x.amount||0;
+        if(x.fromSavings){ ds.bal=Math.max(0, ds.bal-amt); }                 // from existing cash — no surplus draw
+        else { const c=Math.min(amt, avail, ds.bal); ds.bal-=c; avail-=c;     // surplus-funded one-time dump
+          a[d.id]=(a[d.id]||0)+c; if(mi===0) alloc0[d.id]=(alloc0[d.id]||0)+c; }
+      });
+    });
+    // 2) route remaining surplus across goals + debts in priority order
+    for(const it of order){
+      if(avail<=0) break;
+      if(it.type==="goal"){
+        const g=it.g;
+        if(mi < (it.start||0)) continue;
+        const tgt=targetAt(g, mi);
+        if(bal[g.id] >= tgt-0.01) continue;
+        const c=Math.min(it.cap, tgt-bal[g.id], avail); if(c<=0) continue;
+        if(start[g.id]===undefined) start[g.id]=mi;
+        if(mi===0) alloc0[g.id]=(alloc0[g.id]||0)+c;
+        a[g.id]=(a[g.id]||0)+c; bal[g.id]+=c; avail-=c;
+      } else {
+        const ds=debtState[it.id]; if(!ds || ds.bal<=0.01) continue;
+        const c=Math.min(avail, it.cap, ds.bal); if(c<=0) continue;   // it.cap = monthly extra-payment cap
+        ds.bal-=c; avail-=c;
+        a[it.id]=(a[it.id]||0)+c; if(mi===0) alloc0[it.id]=(alloc0[it.id]||0)+c;
+      }
+    }
+    // 3) record debt curve + payoff month
+    (state.debts||[]).forEach(d=>{ const ds=debtState[d.id];
+      ds.curve.push({m:mi+1, bal:ds.bal}); if(ds.bal<=0.01 && ds.payoff===null) ds.payoff=mi+1; });
+    // 4) record goal completion against this month's (possibly grown) target
+    for(const g of state.goals){
+      const tgt=targetAt(g,mi);
+      if(bal[g.id]>=tgt-0.01){ if(end[g.id]===undefined) end[g.id]=mi; }
+      else { end[g.id]=undefined; }
     }
   }
-  return {start,end,alloc0,bal,alloc};
+  return {start, end, alloc0, bal, alloc, debtState};
 }
-let lastSim = null;        // most recent simulation, for the hover tooltip
-let dragging = false;      // suppress tooltip while dragging a bar
+let lastSim = null;
+let dragging = false;
+
+//============ HEADER STATS ============
+function renderHeaderStats(){
+  document.getElementById("statIncome").textContent = fmt(baseIncome());
+  document.getElementById("statExpenses").textContent = fmt(totalExpenses());
+  document.getElementById("statFree").textContent = fmt(baseIncome()-totalExpenses());
+  document.getElementById("statFireTarget").textContent = fmt(state.fire.target);
+  document.querySelector("header .sub").textContent =
+    state.people.join(" & ") + " · monthly basis · as of " + state.meta.asOf;
+  const al=document.getElementById("nwAgeLabel"); if(al) al.textContent=(state.people[0]||"")+" age now";
+}
+
+//============ SANKEY NOTE ============
+function renderSankeyNote(){
+  const debtTxt = totalDebt()>0
+    ? ` You also carry <b>${fmt(totalDebt())}</b> of debt — paying it down is a guaranteed, risk-free return at each debt's rate; schedule lump-sum payoffs in the Debts card below.`
+    : "";
+  document.getElementById("sankeyNote").innerHTML =
+    `<b>How to read this:</b> after expenses, your deployable surplus of <b>${fmt(surplusAt(0))}/mo</b> splits across goals in priority order (drag to reprioritize in the goal timeline below).${debtTxt}`;
+}
 
 //============ SANKEY ============
 function buildSankeyModel(alloc0){
-  // tier-3 buckets from month-0 allocation — each goal (incl. per-person accounts) shown separately
-  const buckets = [];
-  GOAL_DEFS.forEach(g=>{ if(alloc0[g.key]>0) buckets.push({id:g.key,name:g.name,value:alloc0[g.key],color:g.color}); });
-  const dump0 = carDumpSurplusAt(0);
-  if(dump0>0) buckets.push({id:"cardump",name:"Car lump payoff",value:dump0,color:"#5c6373"});
+  const buckets=[];
+  state.goals.forEach(g=>{ if(alloc0[g.id]>0) buckets.push({id:g.id,name:g.name,value:alloc0[g.id],color:g.color}); });
+  (state.debts||[]).forEach(d=>{ if(alloc0[d.id]>0) buckets.push({id:d.id,name:d.name+" (debt payoff)",value:alloc0[d.id],color:"#5c6373"}); });
   buckets.sort((a,b)=>b.value-a.value);
-
-  const nodes=[], links=[];
-  // col0 sources
-  INCOME.forEach(s=>nodes.push({id:s.id,name:s.name,value:s.value,col:0,color:s.color}));
-  // col1 hub
-  nodes.push({id:"income",name:"Income",value:8500,col:1,color:"#c5cbd8"});
-  INCOME.forEach(s=>links.push({source:s.id,target:"income",value:s.value,color:s.color}));
-  // col2 outflows
-  const savingsTotal = buckets.reduce((a,b)=>a+b.value,0);
-  nodes.push({id:"savings",name:"Savings & Investing",value:savingsTotal,col:2,color:"var(--green)"});
+  const nodes=[],links=[];
+  state.income.forEach(s=>nodes.push({id:s.id,name:s.name,value:+s.monthly||0,col:0,color:s.color}));
+  const incTotal=baseIncome();
+  nodes.push({id:"income",name:"Income",value:incTotal,col:1,color:"#c5cbd8"});
+  state.income.forEach(s=>links.push({source:s.id,target:"income",value:+s.monthly||0,color:s.color}));
+  const savingsTotal=buckets.reduce((a,b)=>a+b.value,0);
+  nodes.push({id:"savings",name:"Savings & debt payoff",value:savingsTotal,col:2,color:"var(--green)"});
   links.push({source:"income",target:"savings",value:savingsTotal,color:"var(--green)"});
-  const expColors=["var(--red)","var(--orange)","var(--amber)"];
-  EXPENSES.forEach((e,i)=>{
-    const c = i%2? "var(--orange)":"var(--red)";
-    nodes.push({id:"e"+i,name:e.name,value:e.value,col:2,color:c});
-    links.push({source:"income",target:"e"+i,value:e.value,color:c});
+  // expenses ordered highest → lowest cost (keep original index for a stable node id)
+  state.expenses.map((e,idx)=>({e,idx})).sort((a,b)=>(+b.e.amount||0)-(+a.e.amount||0)).forEach(({e,idx},i)=>{
+    const c=i%2?"var(--orange)":"var(--red)";
+    nodes.push({id:"e"+idx,name:e.name,value:+e.amount||0,col:2,color:c});
+    links.push({source:"income",target:"e"+idx,value:+e.amount||0,color:c});
   });
-  // col3 buckets
   buckets.forEach(b=>{
     nodes.push({id:"b_"+b.id,name:b.name,value:b.value,col:3,color:b.color});
     links.push({source:"savings",target:"b_"+b.id,value:b.value,color:b.color});
@@ -482,19 +643,18 @@ function renderSankey(alloc0){
   const W=1300,H=780, mL=150, mR=255, mT=22, mB=22, nodeW=18, pad=9;
   const cols=[0,1,2,3];
   const colNodes = cols.map(c=>nodes.filter(n=>n.col===c));
-  // global scale: tightest column
   const usableH=H-mT-mB;
   let scale=Infinity;
   colNodes.forEach(cn=>{
     if(!cn.length) return;
     const tot=cn.reduce((a,n)=>a+n.value,0);
+    if(tot===0) return;
     const s=(usableH-(cn.length-1)*pad)/tot;
     scale=Math.min(scale,s);
   });
-  // x per column
+  if(!isFinite(scale)) scale=1;
   const step=(W-mL-mR-nodeW)/(cols.length-1);
   const colX=cols.map(c=>mL+c*step);
-  // stack nodes (centered)
   const byId={};
   colNodes.forEach((cn,ci)=>{
     const tot=cn.reduce((a,n)=>a+n.value,0);
@@ -505,17 +665,16 @@ function renderSankey(alloc0){
       n.out=[]; n.in=[]; byId[n.id]=n; y=n.y1+pad;
     });
   });
-  links.forEach(l=>{ l.s=byId[l.source]; l.t=byId[l.target]; l.s.out.push(l); l.t.in.push(l); });
-  // assign offsets
+  links.forEach(l=>{ l.s=byId[l.source]; l.t=byId[l.target]; if(l.s) l.s.out.push(l); if(l.t) l.t.in.push(l); });
   Object.values(byId).forEach(n=>{
     n.out.sort((a,b)=>a.t.y0-b.t.y0); let o=n.y0;
     n.out.forEach(l=>{ l.sy=o; o+=l.value*scale; });
     n.in.sort((a,b)=>a.s.y0-b.s.y0); let i=n.y0;
     n.in.forEach(l=>{ l.ty=i; i+=l.value*scale; });
   });
-  // draw
   let s='';
   links.forEach(l=>{
+    if(!l.s||!l.t) return;
     const w=Math.max(1,l.value*scale);
     const x0=l.s.x1, x1=l.t.x0, y0=l.sy+w/2, y1=l.ty+w/2, xm=(x0+x1)/2;
     s+=`<path d="M${x0},${y0} C${xm},${y0} ${xm},${y1} ${x1},${y1}" fill="none" stroke="${cssVar(l.color)}" stroke-width="${w}" opacity="0.34"/>`;
@@ -538,94 +697,110 @@ function renderSankey(alloc0){
 }
 
 //============ GANTT ============
-const LABELS = {
-  parallel:"Monthly $ per lifestyle goal · accounts absorb the rest (Bob RRSP → Sally RRSP → TFSAs)",
-  waterfall:"One goal at a time, in priority order (amounts fixed)",
-  custom:"Monthly $ &amp; start month per lifestyle goal · accounts absorb the rest, in cascade order below",
-};
+function labelFor(mode){
+  if(mode==="waterfall") return "One goal at a time, in priority order (amounts fixed)";
+  if(mode==="custom") return "Monthly $ &amp; start month per lifestyle goal · accounts absorb the rest, in cascade order below";
+  const cascade=INVEST_ORDER().map(k=>goalBy(k)?.name).filter(Boolean).join(" → ");
+  return "Monthly $ per lifestyle goal · accounts absorb the rest"+(cascade?` (${cascade})`:"");
+}
+
 function renderInputs(){
   const box=document.getElementById("inputs"); box.innerHTML="";
-  document.getElementById("inputsLabel").innerHTML = LABELS[mode];
-
-  if(mode==="custom"){
-    LIFESTYLE.forEach(k=>{
-      const g=goalBy(k);
+  document.getElementById("inputsLabel").innerHTML = labelFor(state.mode);
+  if(state.mode==="custom"){
+    LIFESTYLE().forEach(id=>{
+      const g=goalBy(id); if(!g) return;
       const d=document.createElement("div"); d.className="inp";
-      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${g.name}</label>
+      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
         <div class="inrow">
-          <input type="number" step="100" min="0" value="${monthly[k]||0}" data-key="${k}" data-f="m" title="monthly $">
+          <input type="number" step="100" min="0" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $">
           <span class="x">@</span>
-          <input class="mo" type="number" step="1" min="0" max="36" value="${startMo[k]||0}" data-key="${k}" data-f="s" title="start month">
-          <span class="hint">${monthLabel(startMo[k]||0)}</span>
+          <input class="mo" type="number" step="1" min="0" max="36" value="${g.startMo||0}" data-key="${id}" data-f="s" title="start month">
+          <span class="hint">${monthLabel(g.startMo||0)}</span>
         </div>`;
       box.appendChild(d);
     });
     const casc=document.createElement("div"); casc.className="inp cascade";
     casc.innerHTML=`<label>Then leftover cascades →</label>
-      <div class="cascrow">${INVEST_ORDER.map((k,i)=>`<span class="chip"><span class="dot" style="background:${cssVar(goalBy(k).color)}"></span>${goalBy(k).name}</span>${i<INVEST_ORDER.length-1?'<span class="arr">→</span>':''}`).join("")}</div>`;
+      <div class="cascrow">${INVEST_ORDER().map((k,i)=>{const g=goalBy(k);if(!g)return""; return `<span class="chip"><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</span>${i<INVEST_ORDER().length-1?'<span class="arr">→</span>':''}`}).join("")}</div>`;
     box.appendChild(casc);
     box.querySelectorAll("input").forEach(inp=>{
-      inp.addEventListener("focus", markGoalPending);
+      inp.addEventListener("focus", ()=>snapState());
       inp.addEventListener("input",e=>{
-        commitGoalPending();
-        const k=e.target.dataset.key, v=+e.target.value||0;
-        if(e.target.dataset.f==="m") monthly[k]=v; else startMo[k]=v;
+        const id=e.target.dataset.key, g=goalBy(id); if(!g) return;
+        const v=+e.target.value||0;
+        if(e.target.dataset.f==="m") g.monthly=v; else g.startMo=v;
         if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(v);
         renderAll();
       });
     });
   } else {
-    LIFESTYLE.forEach(k=>{
-      const g=goalBy(k);
+    LIFESTYLE().forEach(id=>{
+      const g=goalBy(id); if(!g) return;
       const d=document.createElement("div"); d.className="inp";
-      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${g.name}</label>
-        <input type="number" step="50" min="0" value="${monthly[k]}" data-key="${k}" ${mode==="waterfall"?"disabled":""}>`;
+      d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
+        <input type="number" step="50" min="0" value="${g.monthly||0}" data-key="${id}" ${state.mode==="waterfall"?"disabled":""}>`;
       box.appendChild(d);
     });
     box.querySelectorAll("input").forEach(inp=>{
-      inp.addEventListener("focus", markGoalPending);
-      inp.addEventListener("input",e=>{ commitGoalPending(); monthly[e.target.dataset.key]=+e.target.value||0; renderAll(); });
+      inp.addEventListener("focus",()=>snapState());
+      inp.addEventListener("input",e=>{ const g=goalBy(e.target.dataset.key); if(g) g.monthly=+e.target.value||0; renderAll(); });
     });
   }
 }
 
-// drag a lifestyle bar to move its start month, or drag its right edge to change $/mo
+// shared bar drag for EVERY funding item: move = shift start month (goals);
+// resize = change pace (lifestyle/account monthly $, or a debt's monthly extra payment).
 function startBarDrag(e, key, kind){
   e.preventDefault();
-  const track = e.target.closest(".track");
-  const pxPerMonth = track.getBoundingClientRect().width / VIEW_MONTHS;
-  const g = goalBy(key);
-  const origStart = startMo[key]||0;
-  const origDur = Math.max(1, Math.round(g.target / Math.max(1, monthly[key]||0)));
-  const startX = e.clientX;
-  markGoalPending(); // snapshot pre-drag state; committed on first actual change
-  dragging = true;
-  document.body.style.userSelect = "none";
-  document.body.style.cursor = kind==="resize" ? "ew-resize" : "grabbing";
-  let changed = false;
-  // light per-move refresh: only the gantt + the input boxes (keeps them in sync).
-  // The heavy Sankey + FIRE projection are deferred to mouseup so fast drags don't skip months.
-  const liveUpdate = () => { changed = true; renderGantt(simulate()); renderInputs(); };
+  const track=e.target.closest(".track");
+  const pxPerMonth=track.getBoundingClientRect().width/VIEW_MONTHS;
+  const g=goalBy(key), d=debtBy(key);
+  if(!g && !d) return;
+  const startX=e.clientX;
+  snapState();
+  dragging=true;
+  document.body.style.userSelect="none";
+  document.body.style.cursor=kind==="resize"?"ew-resize":"grabbing";
+  let changed=false;
+  const liveUpdate=()=>{ changed=true; renderGantt(simulate()); renderInputs(); };
+  // current bar width (months) as the resize baseline — taken from the last simulation so it
+  // matches what's drawn, whatever the item type.
+  const origStart = g ? (g.startMo||0) : 0;
+  let origDur;
+  if(g){
+    const tgt=Math.max(1, targetAt(g, VIEW_MONTHS));
+    origDur = (g.monthly>0) ? Math.max(1, Math.round(tgt/g.monthly))
+      : (lastSim && lastSim.start[key]!=null && lastSim.end[key]!=null ? Math.max(1, lastSim.end[key]-lastSim.start[key]+1) : VIEW_MONTHS);
+  } else {
+    origDur = Math.max(1, (lastSim && lastSim.debtState && lastSim.debtState[key] && lastSim.debtState[key].payoff) || VIEW_MONTHS);
+  }
   function move(ev){
-    const dM = Math.round((ev.clientX - startX) / pxPerMonth);
-    if(kind==="move"){
-      const ns = Math.max(0, Math.min(VIEW_MONTHS-1, origStart + dM));
-      if(ns !== (startMo[key]||0)){ commitGoalPending(); startMo[key] = ns; liveUpdate(); }
-    } else {
-      const newDur = Math.max(1, origDur + dM);
-      const nm = Math.round(g.target / newDur);
-      if(nm !== (monthly[key]||0)){ commitGoalPending(); monthly[key] = nm; liveUpdate(); }
+    const dM=Math.round((ev.clientX-startX)/pxPerMonth);
+    if(kind==="move" && g){
+      const ns=Math.max(0,Math.min(VIEW_MONTHS-1,origStart+dM));
+      if(ns!==g.startMo){ g.startMo=ns; liveUpdate(); }
+    } else if(kind==="resize"){
+      const newDur=Math.max(1, origDur+dM);
+      if(g){
+        const tgt=Math.max(1, targetAt(g, VIEW_MONTHS));
+        const nm=Math.round(tgt/newDur);
+        if(nm!==g.monthly){ g.monthly=nm; liveUpdate(); }
+      } else {
+        const ex=extraForDuration(d, newDur);
+        if(ex!==d.extra){ d.extra=ex; liveUpdate(); }
+      }
     }
   }
   function up(){
-    document.removeEventListener("mousemove", move);
-    document.removeEventListener("mouseup", up);
-    document.body.style.userSelect = ""; document.body.style.cursor = "";
-    dragging = false;
-    if(changed){ renderAll(); renderNW(); } // full refresh (Sankey, projection, persist) once
+    document.removeEventListener("mousemove",move);
+    document.removeEventListener("mouseup",up);
+    document.body.style.userSelect=""; document.body.style.cursor="";
+    dragging=false;
+    if(changed){ renderAll(); renderNW(); renderDebts(); }
   }
-  document.addEventListener("mousemove", move);
-  document.addEventListener("mouseup", up);
+  document.addEventListener("mousemove",move);
+  document.addEventListener("mouseup",up);
 }
 
 function renderGantt(sim){
@@ -633,126 +808,276 @@ function renderGantt(sim){
   const {start,end,bal}=sim;
   const total=VIEW_MONTHS;
   const pct=i=>Math.min(100,(i/total)*100);
-  // axis labels every 2 months
   const axis=document.getElementById("axis"); axis.innerHTML="";
   for(let i=0;i<=total;i+=2){
     const sp=document.createElement("span"); sp.style.left=pct(i)+"%"; sp.textContent=monthLabel(i); axis.appendChild(sp);
   }
-  // gridlines + deadlines
   const gl=document.getElementById("gridlines"); gl.innerHTML="";
   for(let i=0;i<=total;i++){
     const ln=document.createElement("i"); ln.style.left=pct(i)+"%"; if(i%6===0)ln.className="q"; gl.appendChild(ln);
   }
-  // deadline markers, driven by each goal's `deadline`
-  GOAL_DEFS.filter(g=>g.deadline!=null).forEach(g=>{
+  state.goals.filter(g=>g.deadline!=null).forEach(g=>{
     const d=document.createElement("div"); d.className="deadline";
     d.style.left=pct(g.deadline)+"%"; d.style.background=cssVar(g.color);
     d.title=`${g.name} deadline — ${monthLabel(g.deadline)}`; gl.appendChild(d);
   });
 
   const rows=document.getElementById("rows"); rows.innerHTML="";
-  const order = mode==="waterfall"
-    ? WF_ORDER.map(k=>GOAL_DEFS.find(g=>g.key===k))
-    : GOAL_DEFS;
-  order.forEach(g=>{
-    const s=start[g.key], e=end[g.key];
-    if(s===undefined) return;
-    const eShown = e===undefined? total : e;
-    const clamped = eShown>=total;
-    const left=pct(s), width=Math.max(2.2, pct(eShown+1)-pct(s));
-    const months=(eShown - s)+1;
-    const totalSaved=targetAt(g, VIEW_MONTHS);
-    const newRoom = (g.key in NEW_2027) ? NEW_2027[g.key] : 0;
-    // accounts absorb a varying amount each month — show the average $/mo over their funding window
-    const funded = (e!==undefined) ? totalSaved : (bal[g.key]||0);
-    const avgMo = funded / Math.max(1, eShown - s + 1);
-    const mlabel = g.invest
-      ? `~${fmt(avgMo)}/mo` + (newRoom?` · +${fmt(newRoom)} in 2027`:"")
-      : fmt(monthly[g.key]||0)+"/mo";
-    const finishTxt = e===undefined? "after "+monthLabel(total) : monthLabel(e);
-    const moTxt = g.invest ? `~${fmt(avgMo)}/mo` : `${fmt(monthly[g.key]||0)}/mo`;
-    // on the bar: $/mo (solid) + muted payoff date, depending on available width
-    const barLabel = width>26 ? `<span class="amt">${moTxt}</span> <span class="dt">→ ${finishTxt}</span>`
-                   : width>11 ? `<span class="amt">${moTxt}</span>` : "";
-    // lifestyle goals are drag-to-move / resize-to-reprice (custom mode only)
-    const drag = (!g.invest && mode==="custom");
-    const row=document.createElement("div"); row.className="row";
+  const custom = state.mode==="custom";
+  // ── shared bar-row component used by EVERY funding item (lifestyle, account, debt) ──
+  const addRow = o => {
+    const row=document.createElement("div"); row.className="row"; row.dataset.key=o.id;
     row.innerHTML=`
-      <div class="rl"><span class="dot" style="background:${cssVar(g.color)}"></span>
-        <div>${g.name}<br><small>${fmt(totalSaved)} · ${mlabel}</small></div></div>
+      <div class="rl"><span class="gl-grip" draggable="true" title="Drag to reprioritize">⠿</span><span class="dot" style="background:${cssVar(o.color)}"></span>
+        <div>${esc(o.name)}<br><small>${o.sub}</small></div></div>
       <div class="track">
-        <div class="bar ${clamped&&e===undefined?'arrow':''} ${drag?'draggable':''}" data-key="${g.key}" style="left:${left}%;width:${width}%;background:${cssVar(g.color)}">
-          ${barLabel}${drag?'<div class="rz" data-key="'+g.key+'"></div>':''}
+        <div class="bar ${o.arrow?'arrow':''} ${o.canMove?'draggable':''} ${(o.canResize&&!o.canMove)?'resizebody':''}" data-key="${o.id}" style="left:${o.left}%;width:${o.width}%;background:${o.barColor};${o.barTextColor?'color:'+o.barTextColor:''}">
+          ${o.barText||""}${o.canResize?'<div class="rz" data-key="'+o.id+'"></div>':''}
         </div>
       </div>
-      <div class="rr">done <b>${finishTxt}</b></div>`;
+      <div class="rr">${o.right}</div>`;
     rows.appendChild(row);
+  };
+  // goals AND debts, interleaved in priority order (top = funded first)
+  orderedItems().forEach(it=>{
+    if(it.type==="goal"){
+      const g=it.obj;
+      const s=start[g.id], e=end[g.id];
+      if(s===undefined) return;
+      const eShown=e===undefined?total:e, clamped=eShown>=total;
+      const totalSaved=targetAt(g,VIEW_MONTHS), newRoom=g.roomBump?g.roomBump.amount:0;
+      const funded=(e!==undefined)?totalSaved:(bal[g.id]||0);
+      const avgMo=funded/Math.max(1,eShown-s+1);
+      const paced=(g.kind==="lifestyle")||(g.monthly>0);   // shows a fixed $/mo vs an absorbed ~avg
+      const moTxt=paced?`${fmt(g.monthly||0)}/mo`:`~${fmt(avgMo)}/mo`;
+      const mlabel=moTxt+(g.kind==="account"&&newRoom?` · +${fmt(newRoom)} in ${monthLabel(g.roomBump.month)}`:"");
+      const finishTxt=e===undefined?"after "+monthLabel(total):monthLabel(e);
+      const width=Math.max(2.2, pct(eShown+1)-pct(s));
+      const barText=width>26?`<span class="amt">${moTxt}</span> <span class="dt">→ ${finishTxt}</span>`:width>11?`<span class="amt">${moTxt}</span>`:"";
+      addRow({ id:g.id, color:g.color, barColor:cssVar(g.color), name:g.name,
+        sub:`${fmt(totalSaved)} · ${mlabel}`, left:pct(s), width, arrow:clamped&&e===undefined,
+        barText, canMove:custom, canResize:custom, right:`done <b>${finishTxt}</b>` });
+    } else {
+      // debt — payoff comes from the priority simulation (accelerates when dragged up; resize to pace)
+      const d=it.obj, ds=sim.debtState && sim.debtState[d.id];
+      const cmo=(ds && ds.payoff!=null)?ds.payoff:Infinity, beyond=!(cmo<=total);
+      const width=beyond?100:Math.max(4,pct(cmo+1));
+      const dueTxt=cmo===Infinity?"not cleared in view":"~"+new Date(2026,6+Math.round(Math.min(cmo,600)),1).toLocaleString("en-US",{month:"short",year:"numeric"});
+      const yrs=cmo===Infinity?"—":(cmo/12).toFixed(1)+"y";
+      const extraTxt = d.extra!=null ? ` · +${fmt(d.extra)}/mo extra` : (sim.alloc0&&sim.alloc0[d.id]>0?" · +surplus":"");
+      addRow({ id:d.id, color:"var(--faint)", barColor:"#3a4150", barTextColor:"var(--txt)", name:d.name,
+        sub:`${(d.rate*100).toFixed(1)}% debt · ${fmt(d.balance)} · ${fmt(debtMonthly(d))}/mo min${extraTxt}`,
+        left:0, width, arrow:beyond, barText:`paying down → ${dueTxt}`,
+        canMove:false, canResize:custom, right:`~<b>${yrs}</b>` });
+    }
   });
-  // wire up drag-to-move and resize-to-reprice on lifestyle bars
+
   rows.querySelectorAll(".bar.draggable").forEach(bar=>{
     bar.addEventListener("mousedown",e=>{ if(e.target.classList.contains("rz")) return; startBarDrag(e, bar.dataset.key, "move"); });
+  });
+  rows.querySelectorAll(".bar.resizebody").forEach(bar=>{   // debts: drag the bar itself to pace payoff
+    bar.addEventListener("mousedown",e=>{ if(e.target.classList.contains("rz")) return; startBarDrag(e, bar.dataset.key, "resize"); });
   });
   rows.querySelectorAll(".rz").forEach(h=>{
     h.addEventListener("mousedown",e=>{ e.stopPropagation(); startBarDrag(e, h.dataset.key, "resize"); });
   });
-  // car loan row (independent debt) — real 7.0% amortization incl. scheduled dumps
-  const cmo = carAmort(CAR_LOAN.balance, CAR_LOAN.biweekly, CAR_LOAN.rate, carDumps).months;
-  const beyond = cmo > total;
-  const cwidth = beyond ? 100 : Math.max(4, pct(cmo+1));
-  const payDate = new Date(2026,6+Math.round(cmo),1).toLocaleString("en-US",{month:"short",year:"numeric"});
-  const cl=document.createElement("div"); cl.className="row";
-  cl.innerHTML=`
-    <div class="rl"><span class="dot" style="background:var(--faint)"></span>
-      <div>Honda Civic loan (7.0%)<br><small>${fmt(CAR_LOAN.balance)} · ${fmt(CAR_LOAN.monthly)}/mo</small></div></div>
-    <div class="track">
-      <div class="bar ${beyond?'arrow':''}" style="left:0%;width:${cwidth}%;background:#3a4150;color:var(--txt)">paying down → ~${payDate}</div>
-    </div>
-    <div class="rr">~<b>${(cmo/12).toFixed(1)}y</b></div>`;
-  rows.appendChild(cl);
+  wireRowReorder(rows);   // vertical drag-to-reprioritize via the ⠿ grip (goals AND debts)
+
+  // Build gantt legend dynamically
+  document.getElementById("ganttLegend").innerHTML =
+    state.goals.filter(g=>g.deadline!=null).map(g=>
+      `<span><i style="background:${cssVar(g.color)}"></i> ${esc(g.name)} — ${monthLabel(g.deadline)}</span>`
+    ).join("");
+  // Build dynamic cascade-order sentence in the note
+  const co=document.getElementById("cascadeOrderText");
+  if(co){ const names=INVEST_ORDER().map(k=>goalBy(k)?.name).filter(Boolean);
+    co.textContent = names.length? names.join(" → ") : "(no accounts)"; }
+}
+
+//============ FUNDING PRIORITY (drag to reorder) ============
+let _dragGoalId = null;
+function reprioritize(dragId, dropId, below){
+  if(!dragId || dragId===dropId) return;
+  const p = priorityIds();
+  const from = p.indexOf(dragId); if(from<0) return;
+  p.splice(from,1);
+  const to = p.indexOf(dropId);
+  if(to<0) p.push(dragId); else p.splice(below ? to+1 : to, 0, dragId);
+  snapState(); state.priority = p; renderSetup(); applyAndRender();
+}
+function movePriority(id, dir){
+  const p = priorityIds();
+  const i = p.indexOf(id); if(i<0) return;
+  const j = dir==="up" ? i-1 : i+1; if(j<0 || j>=p.length) return;
+  [p[i],p[j]] = [p[j],p[i]];
+  snapState(); state.priority = p; renderSetup(); applyAndRender();
+}
+// vertical drag-to-reprioritize on gantt goal rows (via the ⠿ grip)
+function wireRowReorder(rows){
+  rows.querySelectorAll(".row[data-key]").forEach(row=>{
+    const grip = row.querySelector(".gl-grip");
+    if(grip){
+      grip.addEventListener("dragstart",e=>{
+        _dragGoalId = row.dataset.key;
+        e.dataTransfer.effectAllowed = "move";
+        try{ e.dataTransfer.setData("text/plain", row.dataset.key); }catch(_){}
+        row.classList.add("dragging");
+      });
+      grip.addEventListener("dragend",()=>{
+        row.classList.remove("dragging");
+        rows.querySelectorAll(".row").forEach(r=>r.classList.remove("drop-above","drop-below"));
+        _dragGoalId = null;
+      });
+    }
+    row.addEventListener("dragover",e=>{
+      if(!_dragGoalId || _dragGoalId===row.dataset.key) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = "move";
+      const rect = row.getBoundingClientRect();
+      const below = (e.clientY-rect.top) > rect.height/2;
+      row.classList.toggle("drop-below", below);
+      row.classList.toggle("drop-above", !below);
+    });
+    row.addEventListener("dragleave",()=>row.classList.remove("drop-above","drop-below"));
+    row.addEventListener("drop",e=>{
+      if(!_dragGoalId) return;
+      e.preventDefault();
+      const rect = row.getBoundingClientRect();
+      const below = (e.clientY-rect.top) > rect.height/2;
+      const dragId = _dragGoalId;
+      row.classList.remove("drop-above","drop-below");
+      reprioritize(dragId, row.dataset.key, below);
+    });
+  });
 }
 
 //============ FIRE ============
 function renderFire(){
-  const yrs = 1250000/(SURPLUS*12);
-  document.getElementById("fireYears").textContent = yrs.toFixed(1)+" yr";
+  const surplus=baseIncome()-totalExpenses();
+  if(surplus<=0){ document.getElementById("fireYears").textContent="—"; return; }
+  const yrs=state.fire.target/(Math.max(1,surplus)*12);
+  document.getElementById("fireYears").textContent=yrs.toFixed(1)+" yr";
 }
 
-//============ DRIVE ============
+//============ RENDER ALL ============
 function renderAll(){
   const sim=simulate();
   renderSankey(sim.alloc0);
   renderGantt(sim);
+  renderHeaderStats();
+  renderSankeyNote();
+  renderFire();
   persist();
 }
-document.querySelectorAll(".btn[data-mode]").forEach(b=>{
-  b.addEventListener("click",()=>{
-    document.querySelectorAll(".btn[data-mode]").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); mode=b.dataset.mode; renderInputs(); renderAll();
-  });
-});
-//============ CAR LUMP-SUM ============
-// biweekly amortization; `dumps` = [{month, amount}] one-time principal payments
-function carAmort(balance, biweekly, annualRate, dumps=[]){
-  const r=annualRate/26; let bal=balance, p=0, interest=0;
-  const byPeriod={}; dumps.forEach(d=>{ const per=Math.round((+d.month||0)*26/12); byPeriod[per]=(byPeriod[per]||0)+(+d.amount||0); });
-  const curve=[{m:0,bal:balance}];
-  while(bal>0.01 && p<2000){
-    if(byPeriod[p]) bal=Math.max(0,bal-byPeriod[p]);
-    if(bal<=0) break;
-    const i=bal*r; interest+=i; bal=bal-(biweekly-i); if(bal<0)bal=0; p++;
-    if(p%2===0||bal<=0) curve.push({m:p*12/26,bal});
-  }
-  return {periods:p, months:p*12/26, interest, curve};
-}
-const carDt = m => new Date(2026,6+Math.round(m),1).toLocaleString("en-US",{month:"short",year:"numeric"});
 
-function renderCarSchedule(){
-  const box=document.getElementById("carDumpRows"); box.innerHTML="";
-  carDumps.forEach((d,i)=>{
+//============ APPLY AND RENDER ============
+function applyAndRender(){
+  renderHeaderStats();
+  renderSankeyNote();
+  renderAll();
+  renderNW();
+  renderDebts();
+  renderAssets();
+  renderInputs();
+}
+
+//============ DEBTS ============
+// baseline amortization: minimum payment only (monthly model), no extra principal
+function amortMonthly(balance, monthlyPmt, annualRate){
+  const rm=annualRate/12; let bal=+balance||0, interest=0, payoff=null;
+  const curve=[{m:0,bal}];
+  for(let mi=0; mi<SIM_MONTHS && bal>0.01; mi++){
+    const intr=bal*rm; interest+=intr; bal=Math.max(0, bal+intr-monthlyPmt);
+    curve.push({m:mi+1,bal});
+    if(bal<=0.01 && payoff===null) payoff=mi+1;
+  }
+  return {curve, interest, months:payoff==null?SIM_MONTHS:payoff, payoff, paidOff:payoff!==null};
+}
+const carDt = m => new Date(2026,6+Math.round(Math.min(m,600)),1).toLocaleString("en-US",{month:"short",year:"numeric"});
+
+// months to clear a debt given a fixed monthly extra payment (minimum + extra)
+function debtPayoffMonths(balance, monthlyPmt, monthlyRate, extra){
+  let bal=+balance||0, m=0;
+  while(bal>0.01 && m<1200){ bal=bal*(1+monthlyRate)-(monthlyPmt+extra); if(bal<0)bal=0; m++; }
+  return bal>0.01 ? Infinity : m;
+}
+// solve the monthly extra payment that clears a debt in ~targetMonths (for bar-drag resizing)
+function extraForDuration(d, targetMonths){
+  const bal=+d.balance||0, pm=debtMonthly(d), rm=(+d.rate||0)/12;
+  if(targetMonths<=0) return Infinity;
+  if(debtPayoffMonths(bal,pm,rm,0) <= targetMonths) return 0;   // minimum alone already clears it in time
+  let lo=0, hi=bal;
+  for(let k=0;k<44;k++){ const mid=(lo+hi)/2; if(debtPayoffMonths(bal,pm,rm,mid) <= targetMonths) hi=mid; else lo=mid; }
+  return Math.round(hi);
+}
+
+// base = minimum-only; plan = the priority simulation (extra surplus + dumps for this debt)
+function debtCompute(d, sim){
+  const base = amortMonthly(+d.balance||0, debtMonthly(d), +d.rate||0);
+  const ds = sim && sim.debtState ? sim.debtState[d.id] : null;
+  const plan = ds
+    ? {curve:ds.curve, interest:ds.interest, payoff:ds.payoff, months:ds.payoff==null?SIM_MONTHS:ds.payoff, paidOff:ds.payoff!=null}
+    : base;
+  return {base, plan};
+}
+function debtStatsHTML(d, base, plan){
+  const intSaved=Math.max(0, base.interest-plan.interest);
+  const baseM=base.paidOff?base.months:SIM_MONTHS, planM=plan.paidOff?plan.months:SIM_MONTHS;
+  const moSaved=Math.max(0, baseM-planM);
+  return `
+    <div class="stat"><div class="k">Payoff — minimum only</div><div class="v sm">${base.paidOff?carDt(base.months):">50y"}</div><div class="k" style="margin-top:3px">${fmt(base.interest)} interest</div></div>
+    <div class="stat"><div class="k">Payoff — with your plan</div><div class="v sm" style="color:var(--green)">${plan.paidOff?carDt(plan.payoff):">50y"}</div><div class="k" style="margin-top:3px">${fmt(plan.interest)} interest</div></div>
+    <div class="stat"><div class="k">Interest saved (guaranteed)</div><div class="v sm" style="color:var(--green)">${fmt(intSaved)}</div></div>
+    <div class="stat"><div class="k">Payoff shortened by</div><div class="v sm">${moSaved.toFixed(0)} mo</div></div>`;
+}
+
+function renderDebts(){
+  const box=document.getElementById("debtBlocks"); if(!box) return;
+  box.innerHTML="";
+  const title=document.getElementById("debtCardTitle");
+  if(title) title.textContent = (state.debts||[]).length===1
+    ? `${state.debts[0].name} — ${fmt(state.debts[0].balance)} @ ${(state.debts[0].rate*100).toFixed(1)}%`
+    : "Debts";
+  const sim=simulate();
+  (state.debts||[]).forEach((d,di)=>{
+    const {base,plan}=debtCompute(d,sim);
+    const freqTxt=d.freq==="biweekly"?"biweekly":"monthly";
+    const aggressive = sim.alloc0 && sim.alloc0[d.id]>0;
+    const block=el("div","debt-block"); block.dataset.di=di;
+    block.innerHTML=`
+      <h3><span class="dot" style="background:var(--faint)"></span>${esc(d.name)} <span style="font-weight:400;color:var(--muted);font-size:13px">· ${esc(d.kind||"Debt")} · ${fmt(d.balance)} @ ${(d.rate*100).toFixed(1)}%</span></h3>
+      <p class="dbsub">${fmt(d.payment)} ${freqTxt} minimum (≈ ${fmt(debtMonthly(d))}/mo)${aggressive?" · <span style=\"color:var(--green)\">+ surplus (high priority — see goal timeline)</span>":" · drag it up the goal priority list to pay it off aggressively from surplus"}${base.paidOff?"":" — ⚠ minimum payment too small to ever clear this debt"}</p>
+      <div class="ctl-lbl">One-time lump sums (existing cash, or surplus at a chosen month) — on top of the priority-driven payoff</div>
+      <div class="dumps"></div>
+      <button class="addbtn">+ Add a lump sum</button>
+      <div class="stats debt-stats">${debtStatsHTML(d,base,plan)}</div>
+      <svg viewBox="0 0 900 240" preserveAspectRatio="xMidYMid meet" style="margin-top:8px" class="debt-chart"></svg>`;
+    box.appendChild(block);
+    renderDebtChart(block.querySelector(".debt-chart"), base, plan, (+d.balance||0)*1.05);
+    renderDumpRows(block.querySelector(".dumps"), di);
+    block.querySelector(".addbtn").addEventListener("click",()=>{
+      snapState(); state.debts[di].dumps.push({month:12,amount:2000,fromSavings:false}); renderDebts(); renderAll();
+    });
+  });
+}
+
+// light refresh of one debt's stats+chart, leaving its dump inputs (and focus) intact
+function refreshDebt(di){
+  const d=state.debts[di]; if(!d) return;
+  const block=document.querySelector('.debt-block[data-di="'+di+'"]'); if(!block) return;
+  const sim=simulate();
+  const {base,plan}=debtCompute(d,sim);
+  const st=block.querySelector(".debt-stats"); if(st) st.innerHTML=debtStatsHTML(d,base,plan);
+  renderDebtChart(block.querySelector(".debt-chart"), base, plan, (+d.balance||0)*1.05);
+}
+
+function renderDumpRows(box, di){
+  if(!box) return;
+  box.innerHTML="";
+  (state.debts[di].dumps||[]).forEach((d,i)=>{
     const row=document.createElement("div"); row.className="dumprow";
-    row.innerHTML=`$<input class="amt" type="number" step="1000" min="0" value="${d.amount}" data-i="${i}" data-f="amount">
+    row.innerHTML=`$<input class="amt" type="number" step="500" min="0" value="${d.amount}" data-i="${i}" data-f="amount">
       <span class="x">in month</span>
-      <input class="mo" type="number" step="1" min="0" max="48" value="${d.month}" data-i="${i}" data-f="month">
+      <input class="mo" type="number" step="1" min="0" max="120" value="${d.month}" data-i="${i}" data-f="month">
       <span class="hint">${carDt(d.month)}</span>
       <label class="cashtog" title="Paid from existing cash — doesn't reduce your monthly investing surplus">
         <input type="checkbox" data-i="${i}" data-f="fromSavings" ${d.fromSavings?"checked":""}> existing cash</label>
@@ -760,90 +1085,79 @@ function renderCarSchedule(){
     box.appendChild(row);
   });
   box.querySelectorAll("input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
-    carDumps[+e.target.dataset.i][e.target.dataset.f]=+e.target.value||0;
+    state.debts[di].dumps[+e.target.dataset.i][e.target.dataset.f]=+e.target.value||0;
     if(e.target.dataset.f==="month") e.target.parentElement.querySelector(".hint").textContent=carDt(+e.target.value||0);
-    renderCar(); renderAll(); // dumps affect the goal timeline too
+    refreshDebt(di); renderAll();   // light refresh keeps input focus; gantt+sankey reflect dumps
   }));
   box.querySelectorAll("input[type=checkbox]").forEach(inp=>inp.addEventListener("change",e=>{
-    carDumps[+e.target.dataset.i].fromSavings = e.target.checked;
-    renderCar(); renderAll();
+    state.debts[di].dumps[+e.target.dataset.i].fromSavings=e.target.checked; refreshDebt(di); renderAll();
   }));
   box.querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>{
-    carDumps.splice(+b.dataset.i,1); renderCarSchedule(); renderCar(); renderAll();
+    snapState(); state.debts[di].dumps.splice(+b.dataset.i,1); renderDebts(); renderAll();
   }));
 }
 
-function renderCar(){
-  const L=CAR_LOAN;
-  const base=carAmort(L.balance, L.biweekly, L.rate);
-  const scen=carAmort(L.balance, L.biweekly, L.rate, carDumps);
-  const totalDumped=carDumps.reduce((a,d)=>a+(+d.amount||0),0);
-  const intSaved=base.interest-scen.interest;
-  const moSaved=base.months-scen.months;
-  const investGain=totalDumped*(Math.pow(1.06, base.months/12)-1);
-  document.getElementById("carStats").innerHTML=`
-    <div class="stat"><div class="k">Payoff — minimum only</div><div class="v sm">${carDt(base.months)}</div><div class="k" style="margin-top:3px">${fmt(base.interest)} interest</div></div>
-    <div class="stat"><div class="k">Payoff — with dumps</div><div class="v sm" style="color:var(--green)">${carDt(scen.months)}</div><div class="k" style="margin-top:3px">${fmt(scen.interest)} interest</div></div>
-    <div class="stat"><div class="k">Total dumped</div><div class="v sm">${fmt(totalDumped)}</div></div>
-    <div class="stat"><div class="k">Interest saved (guaranteed)</div><div class="v sm" style="color:var(--green)">${fmt(intSaved)}</div></div>
-    <div class="stat"><div class="k">Loan shortened by</div><div class="v sm">${moSaved.toFixed(1)} mo</div></div>
-    <div class="stat"><div class="k">Same $ in TFSA @6%*</div><div class="v sm" style="color:var(--blue)">+${fmt(investGain)}</div><div class="k" style="margin-top:3px">not guaranteed</div></div>`;
-  renderCarChart(base, scen);
-}
-
-function renderCarChart(base, scen){
-  const W=900,H=280, pL=58,pR=16,pT=14,pB=28;
-  const maxM=base.months, maxY=CAR_LOAN.balance*1.05;
-  const X=m=>pL+(m/maxM)*(W-pL-pR);
+function renderDebtChart(svg, base, plan, maxYIn){
+  if(!svg) return;
+  const W=900,H=240,pL=58,pR=16,pT=14,pB=28;
+  const maxM=Math.min(360, Math.max(1, base.months||1)), maxY=Math.max(1, maxYIn||1);
+  const X=m=>pL+(Math.min(m,maxM)/maxM)*(W-pL-pR);
   const Y=v=>H-pB-(v/maxY)*(H-pT-pB);
   let s="";
   for(let i=0;i<=4;i++){ const v=maxY*i/4, y=Y(v);
     s+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="var(--line)"/>`;
     s+=`<text x="${pL-8}" y="${y+4}" text-anchor="end" fill="var(--faint)" font-size="11">${fmt(v)}</text>`; }
-  for(let m=0;m<=maxM;m+=12){ s+=`<text x="${X(m)}" y="${H-9}" text-anchor="middle" fill="var(--faint)" font-size="11">${new Date(2026,6+m,1).getFullYear()}</text>`; }
-  const path=(curve,color,w)=>`<path d="M${curve.map(p=>`${X(p.m).toFixed(1)},${Y(p.bal).toFixed(1)}`).join(" L")}" fill="none" stroke="${cssVar(color)}" stroke-width="${w}"/>`;
+  const stepM=maxM>36?12:6;
+  for(let m=0;m<=maxM;m+=stepM){ s+=`<text x="${X(m)}" y="${H-9}" text-anchor="middle" fill="var(--faint)" font-size="11">${new Date(2026,6+Math.round(m),1).getFullYear()}</text>`; }
+  const path=(curve,color,w)=>curve&&curve.length?`<path d="M${curve.map(p=>`${X(p.m).toFixed(1)},${Y(p.bal).toFixed(1)}`).join(" L")}" fill="none" stroke="${cssVar(color)}" stroke-width="${w}"/>`:"";
   s+=path(base.curve,'var(--amber)',2);
-  s+=path(scen.curve,'var(--green)',2.5);
-  // legend
+  s+=path(plan.curve,'var(--green)',2.5);
   s+=`<rect x="${pL+8}" y="${pT}" width="12" height="3" fill="${cssVar('var(--amber)')}"/><text x="${pL+24}" y="${pT+5}" fill="var(--muted)" font-size="11">minimum payments</text>`;
-  s+=`<rect x="${pL+8}" y="${pT+16}" width="12" height="3" fill="${cssVar('var(--green)')}"/><text x="${pL+24}" y="${pT+21}" fill="var(--muted)" font-size="11">with scheduled dumps</text>`;
-  document.getElementById("carChart").innerHTML=s;
+  s+=`<rect x="${pL+8}" y="${pT+16}" width="12" height="3" fill="${cssVar('var(--green)')}"/><text x="${pL+24}" y="${pT+21}" fill="var(--muted)" font-size="11">with your plan (priority + lump sums)</text>`;
+  svg.innerHTML=s;
 }
 
 //============ NET WORTH & FIRE ============
 function renderAssets(){
   const box=document.getElementById("assetsBox"); box.innerHTML="";
-  const dotFor = who => who==="Bob"?"var(--blue)":"var(--indigo)";
-  ["Bob","Sally"].forEach(who=>{
+  const personColors=["var(--blue)","var(--indigo)","var(--violet)","var(--pink)","var(--sky)","var(--amber)"];
+  const dotFor=i=>personColors[Math.min(i,personColors.length-1)];
+  state.people.forEach((who,wi)=>{
     const col=document.createElement("div"); col.className="asset-col";
-    const rows=ASSETS[who].map(([n,v])=>`<div class="arow"><span>${n}</span><span>${fmt(v)}</span></div>`).join("");
-    col.innerHTML=`<h3><span class="dot" style="background:${cssVar(dotFor(who))}"></span>${who}</h3>${rows}
+    const rows=(state.assets[who]||[]).map(([n,v])=>`<div class="arow"><span>${esc(n)}</span><span>${fmt(+v||0)}</span></div>`).join("");
+    col.innerHTML=`<h3><span class="dot" style="background:${cssVar(dotFor(wi))}"></span>${esc(who)}</h3>${rows}
       <div class="asub"><span>Subtotal</span><span>${fmt(sumAssets(who))}</span></div>`;
     box.appendChild(col);
   });
+  const nwt=netWorthToday();
+  const totalAssets=Object.keys(state.assets).reduce((a,w)=>a+sumAssets(w),0);
   const bar=document.createElement("div"); bar.className="nwbar";
   bar.innerHTML=`
-    <div><div class="lbl">Net worth today</div><div class="big" style="color:var(--green)">${fmt(NET_WORTH_TODAY)}</div></div>
-    <div class="pc">${fmt(sumAssets("Bob")+sumAssets("Sally"))} assets − ${fmt(CAR_LOAN.balance)} car loan.</div>`;
+    <div><div class="lbl">Net worth today</div><div class="big" style="color:var(--green)">${fmt(nwt)}</div></div>
+    <div class="pc">${fmt(totalAssets)} assets − ${fmt(totalDebt())} debt.</div>`;
   box.appendChild(bar);
 }
 
 function renderNW(){
-  const r=(+document.getElementById("nwReturn").value||0)/100;
-  const age=+document.getElementById("nwAge").value||0;
-  const retAge=+document.getElementById("nwRetAge").value||65;
-  const fire=+document.getElementById("nwFire").value||0;
+  const r=(state.fire.returnPct||0)/100;
+  const age=state.fire.age||0;
+  const retAge=state.fire.retireAge||65;
+  const fire=state.fire.target||0;
+  const nwToday=netWorthToday();
   const sim=simulate();
-  const lifeSpend = mi => LIFESTYLE.reduce((a,k)=>{const s=sim.start[k],e=sim.end[k];
-    return a+((s!==undefined&&mi>=s&&(e===undefined||mi<=e))?(monthly[k]||0):0);},0);
+  const lifeSpend = mi => LIFESTYLE().reduce((a,id)=>{
+    const g=goalBy(id); if(!g) return a;
+    const s=sim.start[id], e=sim.end[id];
+    return a+((s!==undefined&&mi>=s&&(e===undefined||mi<=e))?(g.monthly||0):0);
+  },0);
   const yearsToRet=Math.max(1,retAge-age);
-  const horizon=Math.min(480, Math.max(yearsToRet+2,12)*12);
-  const withC=[{m:0,v:NET_WORTH_TODAY}], coast=[{m:0,v:NET_WORTH_TODAY}];
-  let nw=NET_WORTH_TODAY, cn=NET_WORTH_TODAY, fireMonth=null, retired=false;
+  const horizon=Math.min(480,Math.max(yearsToRet+2,12)*12);
+  const withC=[{m:0,v:nwToday}], coast=[{m:0,v:nwToday}];
+  let nw=nwToday, cn=nwToday, fireMonth=null, retired=false;
   const draw=fire*0.04/12;
   for(let mi=0;mi<horizon;mi++){
     let contrib;
-    if(!retired && nw<fire){ contrib=Math.max(0, SURPLUS - lifeSpend(mi)); }
+    if(!retired && nw<fire){ contrib=Math.max(0, surplusAt(mi) - lifeSpend(mi)); }
     else { retired=true; contrib=-draw; }
     nw=nw*(1+r/12)+contrib;
     cn=cn*(1+r/12);
@@ -851,13 +1165,13 @@ function renderNW(){
     if((mi+1)%3===0||mi===horizon-1){ withC.push({m:mi+1,v:nw}); coast.push({m:mi+1,v:cn}); }
   }
   const coastTarget=fire/Math.pow(1+r,yearsToRet);
-  const coastOK=NET_WORTH_TODAY>=coastTarget;
-  const coastAtRet=NET_WORTH_TODAY*Math.pow(1+r,yearsToRet);
+  const coastOK=nwToday>=coastTarget;
+  const coastAtRet=nwToday*Math.pow(1+r,yearsToRet);
   const fmtDate=m=>new Date(2026,6+m,1).toLocaleString("en-US",{month:"short",year:"numeric"});
   document.getElementById("nwStats").innerHTML=`
-    <div class="stat"><div class="k">Net worth today</div><div class="v sm">${fmt(NET_WORTH_TODAY)}</div></div>
+    <div class="stat"><div class="k">Net worth today</div><div class="v sm">${fmt(nwToday)}</div></div>
     <div class="stat"><div class="k">Coast FIRE number (today)</div><div class="v sm">${fmt(coastTarget)}</div>
-      <div class="k" style="margin-top:3px">${coastOK?`<span class="badge ok">✓ achieved</span> +${fmt(NET_WORTH_TODAY-coastTarget)}`:`<span class="badge no">not yet</span> need ${fmt(coastTarget-NET_WORTH_TODAY)}`}</div></div>
+      <div class="k" style="margin-top:3px">${coastOK?`<span class="badge ok">✓ achieved</span> +${fmt(nwToday-coastTarget)}`:`<span class="badge no">not yet</span> need ${fmt(coastTarget-nwToday)}`}</div></div>
     <div class="stat"><div class="k">Coast value at age ${retAge}</div><div class="v sm" style="color:var(--blue)">${fmt(coastAtRet)}</div><div class="k" style="margin-top:3px">today's assets alone, no new $</div></div>
     <div class="stat"><div class="k">Full FIRE (${fmt(fire)})</div><div class="v sm" style="color:var(--green)">${fireMonth?fmtDate(fireMonth):">"+(horizon/12)+"yr"}</div>${fireMonth?`<div class="k" style="margin-top:3px">in ${(fireMonth/12).toFixed(1)} yrs · age ${Math.round(age+fireMonth/12)}</div>`:""}</div>`;
   renderNWChart(withC, coast, fire, fireMonth, yearsToRet, retAge, horizon);
@@ -892,52 +1206,399 @@ function renderNWChart(withC, coast, fire, fireMonth, yearsToRet, retAge, horizo
     s+=`<text x="${cx+7}" y="${cy+15}" fill="var(--txt)" font-size="11">FIRE ${2026+Math.floor((6+fireMonth)/12)}</text>`;}
   document.getElementById("nwChart").innerHTML=s;
 }
-["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",renderNW));
 
-document.getElementById("addDump").addEventListener("click",()=>{
-  carDumps.push({month:12, amount:5000}); renderCarSchedule(); renderCar(); renderAll();
+//============ SETUP PANEL ============
+function renderSetup(){
+  const body = document.getElementById("setupBody");
+  if(!body) return;
+  body.innerHTML = "";
+  const personColors = ["var(--blue)","var(--indigo)","var(--violet)","var(--pink)","var(--sky)","var(--amber)"];
+  const personColor = i => personColors[Math.min(i,personColors.length-1)];
+
+  // ── PEOPLE ──
+  const sec1 = sec("People");
+  state.people.forEach((p,pi)=>{
+    const row = el("div","person-row");
+    row.innerHTML = `<span class="dot" style="background:${cssVar(personColor(pi))}"></span>
+      <input type="text" value="${esc(p)}" data-pi="${pi}" placeholder="Name">
+      <button class="del" data-pi="${pi}" title="Remove">×</button>`;
+    row.querySelector("input").addEventListener("change", e=>{
+      const oldName = state.people[pi];
+      const newName = e.target.value.trim() || oldName;
+      if(newName === oldName) return;
+      snapState();
+      if(state.assets[oldName]){ state.assets[newName]=state.assets[oldName]; delete state.assets[oldName]; }
+      state.income.forEach(s=>{ if(s.person===oldName) s.person=newName; });
+      state.goals.forEach(g=>{ if(g.person===oldName) g.person=newName; });
+      state.people[pi]=newName;
+      renderSetup(); applyAndRender();
+    });
+    row.querySelector(".del").addEventListener("click",()=>{
+      if(state.people.length<=1){ alert("Need at least one person."); return; }
+      snapState();
+      const name=state.people[pi];
+      state.people.splice(pi,1);
+      delete state.assets[name];
+      renderSetup(); applyAndRender();
+    });
+    sec1.appendChild(row);
+  });
+  const addPBtn = el("button","addbtn"); addPBtn.textContent="+ Add person";
+  addPBtn.addEventListener("click",()=>{
+    snapState(); const nm="Person "+(state.people.length+1);
+    state.people.push(nm); state.assets[nm]=[];
+    renderSetup(); applyAndRender();
+  });
+  sec1.appendChild(addPBtn);
+  body.appendChild(sec1);
+
+  // ── INCOME ──
+  const sec2 = sec("Income sources");
+  state.income.forEach((src,si)=>{
+    const srcDiv = el("div","");
+    srcDiv.style.cssText="margin-bottom:10px;padding:8px;background:var(--card2);border-radius:8px;border:1px solid var(--line)";
+    const topRow = el("div","src-row");
+    topRow.innerHTML=`<input type="text" class="nm" value="${esc(src.name)}" placeholder="Source name" data-si="${si}" data-f="name">
+      <select data-si="${si}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===src.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
+      $<input type="number" class="amt" step="100" min="0" value="${src.monthly}" data-si="${si}" data-f="monthly">
+      <button class="del" data-si="${si}" data-f="del" title="Remove source">×</button>`;
+    topRow.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
+      const ev=inp.type==="number"?"input":"change";
+      inp.addEventListener(ev,e=>{ const si2=+e.target.dataset.si, f=e.target.dataset.f; if(f==="del") return;
+        if(!state.income[si2]) return;
+        state.income[si2][f] = f==="monthly"?(+e.target.value||0):e.target.value;
+        applyAndRender(); });
+    });
+    topRow.querySelector(".del").addEventListener("click",()=>{
+      snapState(); state.income.splice(si,1); renderSetup(); applyAndRender();
+    });
+    srcDiv.appendChild(topRow);
+    const bonLabel=el("div",""); bonLabel.style.cssText="font-size:11px;color:var(--muted);margin:6px 0 2px";
+    bonLabel.textContent="Bonuses (one-time, by month index):";
+    srcDiv.appendChild(bonLabel);
+    (src.bonuses||[]).forEach((bon,bi)=>{
+      const brow=el("div","bonus-row");
+      brow.innerHTML=`$<input type="number" class="bamount" step="500" min="0" value="${bon.amount}" data-si="${si}" data-bi="${bi}" data-f="amount">
+        in mo<input type="number" class="bmo" step="1" min="0" max="72" value="${bon.month}" data-si="${si}" data-bi="${bi}" data-f="month">
+        <span style="color:var(--faint);font-size:10px">(${monthLabel(bon.month)})</span>
+        <button class="del" data-si="${si}" data-bi="${bi}" data-f="bdel" title="Remove bonus">×</button>`;
+      brow.querySelectorAll("input[data-f]").forEach(inp=>{
+        inp.addEventListener("input",e=>{
+          const si2=+e.target.dataset.si, bi2=+e.target.dataset.bi, f=e.target.dataset.f;
+          if(state.income[si2]&&state.income[si2].bonuses[bi2]) state.income[si2].bonuses[bi2][f]=+e.target.value||0;
+          applyAndRender();
+        });
+      });
+      brow.querySelector(".del").addEventListener("click",()=>{
+        snapState(); state.income[si].bonuses.splice(bi,1); renderSetup(); applyAndRender();
+      });
+      srcDiv.appendChild(brow);
+    });
+    const addBon=el("button","addbtn"); addBon.style="margin-top:4px;font-size:11.5px;padding:4px 10px"; addBon.textContent="+ Add bonus";
+    addBon.addEventListener("click",()=>{ snapState(); state.income[si].bonuses.push({month:6,amount:1000}); renderSetup(); applyAndRender(); });
+    srcDiv.appendChild(addBon);
+    sec2.appendChild(srcDiv);
+  });
+  const addSrc=el("button","addbtn"); addSrc.textContent="+ Add income source";
+  addSrc.addEventListener("click",()=>{ snapState(); state.income.push({id:uid("inc"),name:"New income",person:state.people[0],monthly:0,color:"var(--amber)",bonuses:[]}); renderSetup(); applyAndRender(); });
+  sec2.appendChild(addSrc);
+  body.appendChild(sec2);
+
+  // ── EXPENSES ──
+  const sec3=sec("Expenses");
+  state.expenses.forEach((ex,ei)=>{
+    const row=el("div","exp-row");
+    row.innerHTML=`<input type="text" class="nm" value="${esc(ex.name)}" placeholder="Expense name" data-ei="${ei}" data-f="name">
+      $<input type="number" class="amt" step="50" min="0" value="${ex.amount}" data-ei="${ei}" data-f="amount">
+      <button class="del" data-ei="${ei}" title="Remove">×</button>`;
+    row.querySelector("input[data-f='name']").addEventListener("change",e=>{ state.expenses[+e.target.dataset.ei].name=e.target.value; applyAndRender(); });
+    row.querySelector("input[data-f='amount']").addEventListener("input",e=>{ state.expenses[+e.target.dataset.ei].amount=+e.target.value||0; applyAndRender(); });
+    row.querySelector(".del").addEventListener("click",()=>{ snapState(); state.expenses.splice(ei,1); renderSetup(); applyAndRender(); });
+    sec3.appendChild(row);
+  });
+  const addEx=el("button","addbtn"); addEx.textContent="+ Add expense";
+  addEx.addEventListener("click",()=>{ snapState(); state.expenses.push({id:uid("ex"),name:"New expense",amount:0}); renderSetup(); applyAndRender(); });
+  sec3.appendChild(addEx);
+  body.appendChild(sec3);
+
+  // ── GOALS ──
+  const sec4=sec("Goals (lifestyle & savings accounts)");
+  state.goals.forEach((g,gi)=>{
+    const row=el("div","goal-row");
+    const resolvedColor = toHex(g.color);
+    row.innerHTML=`
+      <input type="text" class="nm" value="${esc(g.name)}" placeholder="Name" data-gi="${gi}" data-f="name" title="Goal name">
+      <select data-gi="${gi}" data-f="kind">
+        <option value="lifestyle" ${g.kind==="lifestyle"?"selected":""}>Lifestyle</option>
+        <option value="account"   ${g.kind==="account"?"selected":""}>Account</option>
+      </select>
+      <label style="font-size:11px;color:var(--muted)">Target:$</label>
+      <input type="number" class="tgt" step="1000" min="0" value="${g.target}" data-gi="${gi}" data-f="target">
+      ${g.kind==="lifestyle"?`<label style="font-size:11px;color:var(--muted)">$/mo:</label>
+        <input type="number" class="mo" step="100" min="0" value="${g.monthly}" data-gi="${gi}" data-f="monthly">`:""}
+      <label style="font-size:11px;color:var(--muted)">Start mo:</label>
+      <input type="number" class="mo" step="1" min="0" max="60" value="${g.startMo||0}" data-gi="${gi}" data-f="startMo">
+      <label style="font-size:11px;color:var(--muted)">DL:</label>
+      <input type="number" class="dl" step="1" min="0" max="60" value="${g.deadline!=null?g.deadline:""}" placeholder="—" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
+      ${g.kind==="account"?`<select data-gi="${gi}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===g.person?"selected":""}>${esc(p)}</option>`).join("")}</select>`:""}
+      <input type="color" value="${resolvedColor}" data-gi="${gi}" data-f="color" title="Color" style="width:32px;height:28px;padding:2px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid var(--line)">
+      <button class="del" data-gi="${gi}" title="Remove goal">×</button>`;
+    row.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
+      const ev=(inp.type==="number"||inp.type==="color")?"input":"change";
+      inp.addEventListener(ev,e=>{
+        const gi2=+e.target.dataset.gi, f=e.target.dataset.f;
+        const g2=state.goals[gi2]; if(!g2) return;
+        if(f==="name") g2.name=e.target.value;
+        else if(f==="kind"){
+          g2.kind=e.target.value;
+          if(e.target.value==="account" && !g2.person) g2.person=state.people[0];
+          renderSetup(); applyAndRender(); return;   // all goals already live in state.priority
+        }
+        else if(f==="target"||f==="monthly"||f==="startMo") g2[f]=+e.target.value||0;
+        else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
+        else if(f==="color") g2.color=e.target.value;
+        else if(f==="person") g2.person=e.target.value;
+        applyAndRender();
+      });
+    });
+    row.querySelector(".del").addEventListener("click",()=>{
+      snapState();
+      const id=state.goals[gi].id;
+      state.goals.splice(gi,1);
+      state.priority=(state.priority||[]).filter(x=>x!==id);
+      renderSetup(); applyAndRender();
+    });
+    sec4.appendChild(row);
+  });
+  const addG=el("button","addbtn"); addG.textContent="+ Add goal";
+  addG.addEventListener("click",()=>{
+    snapState();
+    const newId=uid("goal");
+    state.goals.push({id:newId,kind:"lifestyle",name:"New goal",target:5000,monthly:500,startMo:0,color:"#60a5fa",deadline:null,person:state.people[0],roomBump:null});
+    // insert above the debts (so a new goal outranks debt payoff by default; drag to taste)
+    const firstDebt=(state.priority||[]).findIndex(id=>debtBy(id));
+    if(firstDebt<0) state.priority.push(newId); else state.priority.splice(firstDebt,0,newId);
+    renderSetup(); applyAndRender();
+  });
+  sec4.appendChild(addG);
+  body.appendChild(sec4);
+
+  // ── FUNDING PRIORITY (drag to reorder; goals AND debts) ──
+  const sec5=sec("Funding priority — drag to reorder");
+  const foNote=el("div",""); foNote.style="font-size:11.5px;color:var(--muted);margin-bottom:8px";
+  foNote.innerHTML="Top = funded first. Each month's surplus flows down this list: lifestyle goals take their monthly $, accounts &amp; debts absorb the rest. Drag a <b>debt</b> up to pay it off aggressively.";
+  sec5.appendChild(foNote);
+  orderedItems().forEach((it,pi,arr)=>{
+    const o=it.obj, isDebt=it.type==="debt";
+    const color=isDebt?"var(--faint)":o.color;
+    const row=el("div","prio-row"); row.draggable=true; row.dataset.id=it.id;
+    row.innerHTML=`<span class="grip">⠿</span><span class="dot" style="background:${cssVar(color)}"></span>
+      <span class="prio-name">${esc(o.name)}</span>
+      <span class="prio-kind">${isDebt?"debt":(o.kind==="account"?"account":"goal")}</span>
+      ${pi>0?`<button class="fo-btn" data-dir="up" title="Move up">↑</button>`:""}
+      ${pi<arr.length-1?`<button class="fo-btn" data-dir="down" title="Move down">↓</button>`:""}`;
+    row.addEventListener("dragstart",e=>{ _dragGoalId=it.id; e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",it.id);}catch(_){} row.classList.add("dragging"); });
+    row.addEventListener("dragend",()=>{ row.classList.remove("dragging"); sec5.querySelectorAll(".prio-row").forEach(r=>r.classList.remove("drop-above","drop-below")); _dragGoalId=null; });
+    row.addEventListener("dragover",e=>{ if(!_dragGoalId||_dragGoalId===it.id) return; e.preventDefault(); e.dataTransfer.dropEffect="move";
+      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2;
+      row.classList.toggle("drop-below",below); row.classList.toggle("drop-above",!below); });
+    row.addEventListener("dragleave",()=>row.classList.remove("drop-above","drop-below"));
+    row.addEventListener("drop",e=>{ if(!_dragGoalId) return; e.preventDefault();
+      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2; const dragId=_dragGoalId;
+      row.classList.remove("drop-above","drop-below"); reprioritize(dragId, it.id, below); });
+    row.querySelectorAll(".fo-btn").forEach(b=>b.addEventListener("click",e=>movePriority(it.id, e.target.dataset.dir)));
+    sec5.appendChild(row);
+  });
+  body.appendChild(sec5);
+
+  // ── DEBTS (any kind: car loan, credit card, …) ──
+  const sec6=sec("Debts");
+  (state.debts||[]).forEach((d,di)=>{
+    const row=el("div","debt-row");
+    row.innerHTML=`
+      <input type="text" class="nm" value="${esc(d.name)}" placeholder="Name" data-di="${di}" data-f="name" title="Debt name">
+      <select data-di="${di}" data-f="kind" title="Type">
+        ${["Car loan","Credit card","Student loan","Line of credit","Mortgage","Personal loan","Other"].map(k=>`<option ${k===d.kind?"selected":""}>${k}</option>`).join("")}
+      </select>
+      <label style="font-size:11px;color:var(--muted)">Bal $</label><input type="number" class="num" step="500" min="0" value="${d.balance}" data-di="${di}" data-f="balance">
+      <label style="font-size:11px;color:var(--muted)">Rate %</label><input type="number" class="num" step="0.1" min="0" value="${(d.rate*100).toFixed(2)}" data-di="${di}" data-f="rate">
+      <label style="font-size:11px;color:var(--muted)">Pmt $</label><input type="number" class="num" step="10" min="0" value="${d.payment}" data-di="${di}" data-f="payment">
+      <select data-di="${di}" data-f="freq" title="Payment frequency">
+        <option value="monthly" ${d.freq!=="biweekly"?"selected":""}>monthly</option>
+        <option value="biweekly" ${d.freq==="biweekly"?"selected":""}>biweekly</option>
+      </select>
+      <button class="del" data-di="${di}" title="Remove debt">×</button>`;
+    row.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
+      const ev=(inp.tagName==="SELECT")?"change":(inp.type==="number"?"input":"change");
+      inp.addEventListener(ev,e=>{
+        const i=+e.target.dataset.di, f=e.target.dataset.f, d2=state.debts[i]; if(!d2) return;
+        if(f==="name"||f==="kind"||f==="freq") d2[f]=e.target.value;
+        else if(f==="rate") d2.rate=(+e.target.value||0)/100;
+        else d2[f]=+e.target.value||0;
+        if(f==="freq"||f==="kind"){ renderSetup(); }
+        applyAndRender();
+      });
+    });
+    row.querySelector(".del").addEventListener("click",()=>{
+      snapState();
+      const id=state.debts[di].id;
+      state.debts.splice(di,1);
+      state.priority=(state.priority||[]).filter(x=>x!==id);
+      renderSetup(); applyAndRender();
+    });
+    sec6.appendChild(row);
+  });
+  const addD=el("button","addbtn"); addD.textContent="+ Add debt";
+  addD.addEventListener("click",()=>{
+    snapState();
+    const id=uid("debt");
+    state.debts.push({id,name:"New debt",kind:"Credit card",balance:2000,rate:0.1999,payment:100,freq:"monthly",dumps:[]});
+    state.priority.push(id);   // new debts start at lowest priority (min payments only)
+    renderSetup(); applyAndRender();
+  });
+  sec6.appendChild(addD);
+  body.appendChild(sec6);
+
+  // ── ASSETS ──
+  const sec7=sec("Assets");
+  state.people.forEach((who,wi)=>{
+    const personSec=el("div","");
+    const h=el("div",""); h.style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px";
+    h.innerHTML=`<span class="dot" style="background:${cssVar(personColor(wi))}"></span>${esc(who)}`;
+    personSec.appendChild(h);
+    (state.assets[who]||[]).forEach(([nm,val],ai)=>{
+      const row=el("div","asset-edit-row");
+      row.innerHTML=`<input type="text" class="nm" value="${esc(nm)}" placeholder="Account name" data-who="${wi}" data-ai="${ai}" data-f="name">
+        $<input type="number" class="amt" step="1000" min="0" value="${val}" data-who="${wi}" data-ai="${ai}" data-f="val">
+        <button class="del" data-who="${wi}" data-ai="${ai}" title="Remove">×</button>`;
+      row.querySelector("input[data-f='name']").addEventListener("change",e=>{
+        state.assets[state.people[+e.target.dataset.who]][+e.target.dataset.ai][0]=e.target.value; applyAndRender();
+      });
+      row.querySelector("input[data-f='val']").addEventListener("input",e=>{
+        state.assets[state.people[+e.target.dataset.who]][+e.target.dataset.ai][1]=+e.target.value||0; applyAndRender();
+      });
+      row.querySelector(".del").addEventListener("click",e=>{
+        snapState(); state.assets[who].splice(+e.target.dataset.ai,1); renderSetup(); applyAndRender();
+      });
+      personSec.appendChild(row);
+    });
+    const addA=el("button","addbtn"); addA.style="margin-top:4px"; addA.textContent=`+ Add ${who} account`;
+    addA.addEventListener("click",()=>{ snapState(); if(!state.assets[who]) state.assets[who]=[]; state.assets[who].push(["New account",0]); renderSetup(); applyAndRender(); });
+    personSec.appendChild(addA);
+    sec7.appendChild(personSec);
+  });
+  body.appendChild(sec7);
+
+  // ── EXPORT / IMPORT ──
+  const sec8=sec("Export / Import");
+  const ioDiv=el("div","setup-io");
+  const expBtn=el("button","btn"); expBtn.textContent="Export JSON";
+  expBtn.addEventListener("click",()=>{
+    const txt=JSON.stringify(state,null,2);
+    const ta=sec8.querySelector("textarea");
+    if(ta){ ta.value=txt; ta.select(); try{document.execCommand("copy");}catch(e){} }
+  });
+  const impBtn=el("button","btn"); impBtn.textContent="Import JSON";
+  impBtn.addEventListener("click",()=>{
+    const ta=sec8.querySelector("textarea");
+    if(!ta||!ta.value.trim()) return;
+    try{
+      const s=JSON.parse(ta.value);
+      snapState(); state=deepMerge(structuredClone(DEFAULT_STATE), s); normalize(); syncNWInputs(); renderSetup(); applyAndRender();
+    }catch(e){ alert("Invalid JSON: "+e.message); }
+  });
+  ioDiv.appendChild(expBtn); ioDiv.appendChild(impBtn);
+  sec8.appendChild(ioDiv);
+  const ta=el("textarea",""); ta.placeholder="Paste JSON here to import, or click Export to see current state";
+  sec8.appendChild(ta);
+  body.appendChild(sec8);
+}
+
+//============ SETUP TOGGLE ============
+function initSetupToggle(){
+  const btn=document.getElementById("setupToggle");
+  const body=document.getElementById("setupBody");
+  const chev=document.getElementById("setupChevron");
+  if(!btn||!body) return;
+  const open=state.meta.setupOpen!==false;
+  body.style.display=open?"":"none";
+  if(chev) chev.textContent=open?"▴":"▾";
+  btn.addEventListener("click",()=>{
+    const isOpen=body.style.display!=="none";
+    body.style.display=isOpen?"none":"";
+    if(chev) chev.textContent=isOpen?"▾":"▴";
+    state.meta.setupOpen=!isOpen; persist();
+  });
+}
+
+//============ TOOLTIP ============
+(function(){
+  const rowsEl=document.getElementById("rows"), tip=document.getElementById("barTip");
+  if(rowsEl){
+    rowsEl.addEventListener("mousemove",e=>{
+      const bar=!dragging&&e.target.closest(".bar[data-key]");
+      if(!bar){ tip.style.display="none"; return; }
+      const key=bar.dataset.key, g=goalBy(key), track=bar.closest(".track");
+      if(!g){ tip.style.display="none"; return; }
+      const rect=track.getBoundingClientRect();
+      let mi=Math.floor((e.clientX-rect.left)/(rect.width/VIEW_MONTHS));
+      mi=Math.max(0,Math.min(VIEW_MONTHS-1,mi));
+      const amt=(lastSim&&lastSim.alloc[mi])?(lastSim.alloc[mi][key]||0):0;
+      tip.innerHTML=`<div class="h">${esc(g.name)} · ${monthLabel(mi)}</div>`
+        +(amt>0?`<b>${fmt(amt)}</b> invested this month`:`<span class="sub2">no contribution this month</span>`);
+      tip.style.display="block";
+      const flip=e.clientX>window.innerWidth-200;
+      tip.style.left=(flip?e.clientX-tip.offsetWidth-14:e.clientX+14)+"px";
+      tip.style.top=(e.clientY+14)+"px";
+    });
+    rowsEl.addEventListener("mouseleave",()=>{ tip.style.display="none"; });
+  }
+})();
+
+//============ INIT ============
+function syncNWInputs(){
+  document.getElementById("nwReturn").value=state.fire.returnPct;
+  document.getElementById("nwAge").value=state.fire.age;
+  document.getElementById("nwRetAge").value=state.fire.retireAge;
+  document.getElementById("nwFire").value=state.fire.target;
+}
+loadState();
+normalize();
+syncNWInputs();
+
+["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",e=>{
+  const map={nwReturn:"returnPct",nwAge:"age",nwRetAge:"retireAge",nwFire:"target"};
+  state.fire[map[id]]=+e.target.value||0;
+  renderNW();
+}));
+
+document.querySelectorAll(".btn[data-mode]").forEach(b=>b.classList.toggle("active", b.dataset.mode===state.mode));
+document.querySelectorAll(".btn[data-mode]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".btn[data-mode]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); state.mode=b.dataset.mode; renderInputs(); renderAll();
+  });
 });
 
 document.getElementById("resetBtn").addEventListener("click",()=>{
-  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
-  location.reload();
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){} location.reload();
 });
-document.getElementById("undoBtn").addEventListener("click", undoGoals);
 
-// hover a goal bar → show that month's actual contribution (accounts vary month to month)
-(function(){
-  const rowsEl=document.getElementById("rows"), tip=document.getElementById("barTip");
-  rowsEl.addEventListener("mousemove",e=>{
-    const bar = !dragging && e.target.closest(".bar[data-key]");
-    if(!bar){ tip.style.display="none"; return; }
-    const key=bar.dataset.key, g=goalBy(key), track=bar.closest(".track");
-    const rect=track.getBoundingClientRect();
-    let mi=Math.floor((e.clientX-rect.left)/(rect.width/VIEW_MONTHS));
-    mi=Math.max(0,Math.min(VIEW_MONTHS-1,mi));
-    const amt=(lastSim && lastSim.alloc[mi]) ? (lastSim.alloc[mi][key]||0) : 0;
-    tip.innerHTML=`<div class="h">${g.name} · ${monthLabel(mi)}</div>`
-      + (amt>0 ? `<b>${fmt(amt)}</b> invested this month` : `<span class="sub2">no contribution this month</span>`);
-    tip.style.display="block";
-    const flip = e.clientX > window.innerWidth-200;
-    tip.style.left = (flip ? e.clientX - tip.offsetWidth - 14 : e.clientX + 14) + "px";
-    tip.style.top  = (e.clientY + 14) + "px";
-  });
-  rowsEl.addEventListener("mouseleave",()=>{ tip.style.display="none"; });
-})();
+document.getElementById("undoBtn").addEventListener("click", undoGoals);
 document.addEventListener("keydown",e=>{
   if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="z" && !/INPUT|TEXTAREA/.test(e.target.tagName)){
     e.preventDefault(); undoGoals();
   }
 });
 
-// restore saved settings, then render
-loadState();
-document.querySelectorAll(".btn[data-mode]").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
-const sv=window._saved;
-if(sv){
-  [["nwReturn","nwReturn"],["nwAge","nwAge"],["nwRetAge","nwRetAge"],["nwFire","nwFire"]].forEach(([id,k])=>{
-    if(sv[k]!=null) document.getElementById(id).value = sv[k];
-  });
-}
-renderInputs(); renderFire(); renderAll(); renderCarSchedule(); renderCar(); renderAssets(); renderNW();
+initSetupToggle();
+renderSetup();
+renderHeaderStats();
+renderSankeyNote();
+renderInputs();
+renderFire();
+renderAll();
+renderDebts();
+renderAssets();
+renderNW();
 </script>
