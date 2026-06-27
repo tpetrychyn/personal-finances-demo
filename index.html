@@ -800,13 +800,14 @@ function renderInputs(){
       const g=goalBy(id); if(!g) return;
       const maxMo=budgetLeft;
       const actualStart=lastSim&&lastSim.start[id]!=null?lastSim.start[id]:null;
-      const hintTxt=monthLabel(g.startMo||0);
+      const displayMo=Math.max(g.startMo||0, actualStart??0);
+      const hintTxt=monthLabel(displayMo);
       const d=document.createElement("div"); d.className="inp";
       d.innerHTML=`<label><span class="dot" style="background:${cssVar(g.color)}"></span>${esc(g.name)}</label>
         <div class="inrow">
           <input type="number" step="1" min="0" max="${maxMo}" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $ (max ${fmt(maxMo)} after higher-priority goals)">
           <span class="x">@</span>
-          <input class="mo" type="number" step="1" min="${actualStart??0}" max="${VIEW_MONTHS}" value="${g.startMo||0}" data-key="${id}" data-f="s" title="start month">
+          <input class="mo" type="number" step="1" min="${actualStart??0}" max="${VIEW_MONTHS}" value="${displayMo}" data-key="${id}" data-f="s" title="start month">
           <span class="hint">${hintTxt}</span>
         </div>`;
       budgetLeft=Math.max(0,budgetLeft-(g.monthly||0));
@@ -858,7 +859,6 @@ function startBarDrag(e, key, kind){
   const g=goalBy(key), d=debtBy(key);
   if(!g && !d) return;
   const startX=e.clientX;
-  const dragMinMo=g&&lastSim&&lastSim.start[key]!=null?lastSim.start[key]:0;
   snapState();
   dragging=true;
   document.body.style.userSelect="none";
@@ -879,7 +879,7 @@ function startBarDrag(e, key, kind){
   function move(ev){
     const dM=Math.round((ev.clientX-startX)/pxPerMonth);
     if(kind==="move" && g){
-      const ns=Math.max(dragMinMo,Math.min(VIEW_MONTHS-1,origStart+dM));
+      const ns=Math.max(0,Math.min(VIEW_MONTHS-1,origStart+dM));
       if(ns!==g.startMo){ g.startMo=ns; liveUpdate(); }
     } else if(kind==="resize"){
       const newDur=Math.max(1, origDur+dM);
