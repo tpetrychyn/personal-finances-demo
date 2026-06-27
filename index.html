@@ -858,6 +858,7 @@ function startBarDrag(e, key, kind){
   const g=goalBy(key), d=debtBy(key);
   if(!g && !d) return;
   const startX=e.clientX;
+  const dragMinMo=g&&lastSim&&lastSim.start[key]!=null?lastSim.start[key]:0;
   snapState();
   dragging=true;
   document.body.style.userSelect="none";
@@ -878,7 +879,7 @@ function startBarDrag(e, key, kind){
   function move(ev){
     const dM=Math.round((ev.clientX-startX)/pxPerMonth);
     if(kind==="move" && g){
-      const ns=Math.max(0,Math.min(VIEW_MONTHS-1,origStart+dM));
+      const ns=Math.max(dragMinMo,Math.min(VIEW_MONTHS-1,origStart+dM));
       if(ns!==g.startMo){ g.startMo=ns; liveUpdate(); }
     } else if(kind==="resize"){
       const newDur=Math.max(1, origDur+dM);
