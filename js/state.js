@@ -26,13 +26,13 @@ const GENERIC_STATE = {
     { id:"ex12", name:"Eating out",      amount:200,  cat:"guilt" },
   ],
   goals: [
-    { id:"emergency", kind:"account",   name:"Emergency fund", target:10000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:10,   person:"Bob",  roomBump:null },
-    { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:14000, monthly:2600, startMo:0,  color:"var(--pink)",   deadline:14,   person:null, roomBump:null },
-    { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:24,   person:null, roomBump:null },
-    { id:"carfund",   kind:"lifestyle", name:"Next-car fund",  target:10000, monthly:800,  startMo:16, color:"#eab308",       deadline:null, person:null, roomBump:null },
-    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:8000,  monthly:1000, startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
-    { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, person:"Bob",   roomBump:null },
-    { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, person:"Sally", roomBump:null },
+    { id:"emergency", kind:"account",   name:"Emergency fund", target:10000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:10,   roomBump:null },
+    { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:14000, monthly:2600, startMo:0,  color:"var(--pink)",   deadline:14,   roomBump:null },
+    { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:24,   roomBump:null },
+    { id:"carfund",   kind:"lifestyle", name:"Next-car fund",  target:10000, monthly:800,  startMo:16, color:"#eab308",       deadline:null, roomBump:null },
+    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:8000,  monthly:1000, startMo:0,  color:"var(--green)",  deadline:8,    roomBump:null },
+    { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, roomBump:null },
+    { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, roomBump:null },
   ],
   // single priority list across ALL goals — top = funded first; raising a goal's
   // monthly amount eats into the surplus left for everything below it.

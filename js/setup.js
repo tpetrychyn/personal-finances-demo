@@ -23,7 +23,6 @@ function renderSetup(){
       if(state.assets[oldName]){ state.assets[newName]=state.assets[oldName]; delete state.assets[oldName]; }
       if(state.ages[oldName]!=null){ state.ages[newName]=state.ages[oldName]; delete state.ages[oldName]; }
       state.income.forEach(s=>{ if(s.person===oldName) s.person=newName; });
-      state.goals.forEach(g=>{ if(g.person===oldName) g.person=newName; });
       state.people[pi]=newName;
       renderSetup(); applyAndRender();
     });
@@ -148,9 +147,6 @@ function renderSetup(){
       <input type="number" class="tgt" step="1000" min="0" value="${g.target}" data-gi="${gi}" data-f="target">
       <label style="font-size:11px;color:var(--muted)">Deadline:</label>
       <input type="number" class="dl" step="1" min="0" max="60" value="${g.deadline!=null?g.deadline:""}" placeholder="—" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
-      <span class="fld-person${g.kind==="account"?"":" hidden-field"}">
-        <select data-gi="${gi}" data-f="person" tabindex="${g.kind==="account"?"0":"-1"}">${state.people.map(p=>`<option value="${esc(p)}" ${p===g.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
-      </span>
       <input type="color" value="${resolvedColor}" data-gi="${gi}" data-f="color" title="Color" style="width:32px;height:28px;padding:2px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid var(--line)">
       <button class="del" data-gi="${gi}" title="Remove goal">×</button>`;
     row.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
@@ -159,15 +155,10 @@ function renderSetup(){
         const gi2=+e.target.dataset.gi, f=e.target.dataset.f;
         const g2=state.goals[gi2]; if(!g2) return;
         if(f==="name") g2.name=e.target.value;
-        else if(f==="kind"){
-          g2.kind=e.target.value;
-          if(e.target.value==="account" && !g2.person) g2.person=state.people[0];
-          renderSetup(); applyAndRender(); return;   // all goals already live in state.priority
-        }
+        else if(f==="kind"){ g2.kind=e.target.value; renderSetup(); applyAndRender(); return; }
         else if(f==="target") g2[f]=Math.round(+e.target.value||0);
         else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
         else if(f==="color") g2.color=e.target.value;
-        else if(f==="person") g2.person=e.target.value;
         applyAndRender();
       });
     });
@@ -193,7 +184,7 @@ function renderSetup(){
   addG.addEventListener("click",()=>{
     snapState();
     const newId=uid("goal");
-    state.goals.push({id:newId,kind:"lifestyle",name:"New goal",target:5000,monthly:500,startMo:0,color:"#60a5fa",deadline:null,person:state.people[0],roomBump:null});
+    state.goals.push({id:newId,kind:"lifestyle",name:"New goal",target:5000,monthly:500,startMo:0,color:"#60a5fa",deadline:null,roomBump:null});
     // insert above the debts (so a new goal outranks debt payoff by default; drag to taste)
     const firstDebt=(state.priority||[]).findIndex(id=>debtBy(id));
     if(firstDebt<0) state.priority.push(newId); else state.priority.splice(firstDebt,0,newId);

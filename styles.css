@@ -178,9 +178,6 @@
   .goal-row input.tgt{width:74px}
   .goal-row input.dl{width:46px}
   .goal-row select{font-size:12px;padding:5px 7px}
-  .goal-row .fld-person{display:inline-flex;align-items:center;gap:6px;width:88px}
-  .goal-row .fld-person select{width:100%}
-  .goal-row .hidden-field{visibility:hidden}
   .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
   .del:hover{color:var(--red)}
   .fo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
