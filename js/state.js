@@ -46,7 +46,7 @@ const GENERIC_STATE = {
     Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
     Sally: [["Chequing",2500],["Savings",6000],["TFSA",16000],["RRSP (work pension)",22000]],
   },
-  fire: { target:1250000, returnPct:7.5, retireAge:60 },
+  fire: { target:1500000, returnPct:5, retireAge:60 },
   freedom: {
     scenarios: [
       { id:"sc_current", name:"Current plan", color:"var(--green)", phases: [
@@ -54,10 +54,11 @@ const GENERIC_STATE = {
         { id:"ph_sally1", person:"Sally", label:"Sally salary",     annual:40800, startMonth:0, months:null },
         { id:"ph_sally2", person:"Sally", label:"Sally side gig",   annual:3600,  startMonth:0, months:null },
       ]},
-      { id:"sc_sahm", name:"Sally SAHM", color:"var(--blue)", phases: [
-        { id:"ph_bob2",   person:"Bob",   label:"Bob salary (raise)", annual:60000, startMonth:0, months:null },
-        { id:"ph_sally3", person:"Sally", label:"Sally salary",       annual:40800, startMonth:0, months:48 },
-        { id:"ph_sally4", person:"Sally", label:"Sally side gig",     annual:3600,  startMonth:0, months:48 },
+      { id:"sc_sahm", name:"Sally stay home", color:"var(--blue)", phases: [
+        { id:"ph_bob2",   person:"Bob",   label:"Bob salary", annual:50400, startMonth:0,  months:42 },
+        { id:"ph_bob3",   person:"Bob",   label:"Bob salary", annual:60000, startMonth:42, months:null },
+        { id:"ph_sally3", person:"Sally", label:"Sally salary",     annual:40800, startMonth:0, months:48 },
+        { id:"ph_sally4", person:"Sally", label:"Sally side gig",   annual:3600,  startMonth:0, months:113 },
       ]},
     ],
   },
