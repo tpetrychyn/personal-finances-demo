@@ -123,7 +123,6 @@ document.body.insertAdjacentHTML("afterbegin", `
         <div class="ctl-lbl">Assumptions (edit freely)</div>
         <div class="inputs">
           <div class="inp"><label>Return %/yr (nominal)</label><input id="nwReturn" type="number" step="0.5" value="6"></div>
-          <div class="inp"><label id="nwAgeLabel">Age now</label><input id="nwAge" type="number" step="1" value="34"></div>
           <div class="inp"><label>Coast retire age</label><input id="nwRetAge" type="number" step="1" value="60"></div>
           <div class="inp"><label>FIRE target</label><input id="nwFire" type="number" step="10000" value="1250000"></div>
         </div>
@@ -137,7 +136,7 @@ document.body.insertAdjacentHTML("afterbegin", `
 
     <div class="note">
       <b>Coast FIRE</b> = the point where your invested assets are big enough that, <i>even if you never contribute another dollar</i>, normal market growth carries them to your FIRE number by your retirement age. Once you cross it, work/saving becomes optional — you're just "coasting." <b>Full FIRE</b> = the portfolio actually reaching your target (here $1.25M, ~4% withdrawal ≈ $50k/yr). After Full FIRE the line models a 4%/yr drawdown, so it roughly plateaus.<br><br>
-      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); Bob's age is a guess — set it and the retire age for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
+      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); ages are set per-person in Setup — keep the first person's age current and set the retire age here for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
     </div>
   </div>
 

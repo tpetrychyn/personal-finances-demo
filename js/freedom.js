@@ -38,7 +38,7 @@ function ffCurrentPlanScenario(){
 function ensureFreedom(){
   if(!state.freedom || typeof state.freedom!=="object") state.freedom = {};
   const f = state.freedom;
-  if(!(f.horizonYears>0)) f.horizonYears = Math.max(20, (state.fire.retireAge||60)-(state.fire.age||30)+5);
+  if(!(f.horizonYears>0)) f.horizonYears = Math.max(20, (state.fire.retireAge||60)-(primaryAge()||30)+5);
   if(!Array.isArray(f.scenarios)) f.scenarios = [];
   f.scenarios.forEach(sc=>{
     if(!sc.id) sc.id = uid("sc");
@@ -58,7 +58,7 @@ const ffPhase = (sc,id) => (sc.phases||[]).find(p=>p.id===id);
 // the projection window in months — everything (phase ends, date pickers) is bounded by this.
 // A phase whose `until` reaches the horizon end is stored as months=null ("runs to the end").
 function ffHorizonMonths(){
-  const age=state.fire.age||0, retAge=state.fire.retireAge||65;
+  const age=primaryAge()||0, retAge=state.fire.retireAge||65;
   const retMonth=Math.round(Math.max(1,retAge-age)*12);
   return Math.max(retMonth+12, Math.round((state.freedom.horizonYears||40)*12));
 }
@@ -78,7 +78,7 @@ function ffIncomeAt(sc, mi){
 function ffProject(sc){
   const r = (state.fire.returnPct||0)/100, mr = r/12;
   const fire = state.fire.target||0;
-  const age = state.fire.age||0, retAge = state.fire.retireAge||65;
+  const age = primaryAge()||0, retAge = state.fire.retireAge||65;
   const yearsToRet = Math.max(1, retAge-age);
   const retMonth = Math.round(yearsToRet*12);
   const horizon = ffHorizonMonths();

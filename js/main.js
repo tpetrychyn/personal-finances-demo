@@ -52,7 +52,6 @@
 //============ INIT ============
 function syncNWInputs(){
   document.getElementById("nwReturn").value=state.fire.returnPct;
-  document.getElementById("nwAge").value=state.fire.age;
   document.getElementById("nwRetAge").value=state.fire.retireAge;
   document.getElementById("nwFire").value=state.fire.target;
 }
@@ -60,8 +59,8 @@ loadState();
 normalize();
 syncNWInputs();
 
-["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",e=>{
-  const map={nwReturn:"returnPct",nwAge:"age",nwRetAge:"retireAge",nwFire:"target"};
+["nwReturn","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",e=>{
+  const map={nwReturn:"returnPct",nwRetAge:"retireAge",nwFire:"target"};
   state.fire[map[id]]=Math.round(+e.target.value||0);
   renderNW(); renderFireImpact(); renderFreedomOutput();
 }));

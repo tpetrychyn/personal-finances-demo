@@ -25,7 +25,7 @@ function renderAssets(){
 
 function renderNW(){
   const r=(state.fire.returnPct||0)/100;
-  const age=state.fire.age||0;
+  const age=primaryAge()||0;
   const retAge=state.fire.retireAge||65;
   const fire=state.fire.target||0;
   const nwToday=netWorthToday();
@@ -99,7 +99,7 @@ function renderNWChart(withC, coast, fire, fireMonth, yearsToRet, retAge, horizo
 // FIRE and Coast FIRE are reached. Reads global `state`, so callers mutate a temp clone.
 function fireProjection(){
   const r=(state.fire.returnPct||0)/100;
-  const age=state.fire.age||0, retAge=state.fire.retireAge||65;
+  const age=primaryAge()||0, retAge=state.fire.retireAge||65;
   const fire=state.fire.target||0;
   const nwToday=netWorthToday();
   const sim=simulate();

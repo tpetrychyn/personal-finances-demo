@@ -6,7 +6,6 @@ function renderHeaderStats(){
   document.getElementById("statFireTarget").textContent = fmt(state.fire.target);
   document.querySelector("header .sub").textContent =
     state.people.join(" & ") + " · monthly basis · as of " + state.meta.asOf;
-  const al=document.getElementById("nwAgeLabel"); if(al) al.textContent=(state.people[0]||"")+" age now";
 }
 
 //============ BUDGET WIDGET ============

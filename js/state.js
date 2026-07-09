@@ -7,8 +7,9 @@
 const GENERIC_STATE = {
   meta: { asOf: "June 2026", startYear: 2026, startMonth: 6, viewMonths: 24, setupOpen: false },
   people: ["Bob", "Sally"],
+  ages: { Bob:34, Sally:32 },
   income: [
-    { id:"inc1", name:"Bob — salary",    person:"Bob",   monthly:4800, color:"var(--blue)",   bonuses:[] },
+    { id:"inc1", name:"Bob — salary",    person:"Bob",   monthly:4200, color:"var(--blue)",   bonuses:[] },
     { id:"inc2", name:"Sally — salary",  person:"Sally", monthly:3400, color:"var(--indigo)", bonuses:[] },
     { id:"inc3", name:"Sally — side gig",person:"Sally", monthly:300,  color:"var(--violet)", bonuses:[] },
   ],
@@ -25,17 +26,17 @@ const GENERIC_STATE = {
     { id:"ex12", name:"Eating out",      amount:200,  cat:"guilt" },
   ],
   goals: [
-    { id:"emergency", kind:"account",   name:"Emergency fund", target:15000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:null, person:"Bob",  roomBump:null },
-    { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:20000, monthly:2000, startMo:0,  color:"var(--pink)",   deadline:10,   person:null, roomBump:null },
+    { id:"emergency", kind:"account",   name:"Emergency fund", target:10000, monthly:1000, startMo:0,  color:"var(--orange)", deadline:10,   person:"Bob",  roomBump:null },
+    { id:"wedding",   kind:"lifestyle", name:"Wedding",        target:14000, monthly:2600, startMo:0,  color:"var(--pink)",   deadline:14,   person:null, roomBump:null },
     { id:"vacation",  kind:"lifestyle", name:"Vacation",       target:6000,  monthly:800,  startMo:11, color:"var(--sky)",    deadline:24,   person:null, roomBump:null },
     { id:"carfund",   kind:"lifestyle", name:"Next-car fund",  target:10000, monthly:800,  startMo:16, color:"#eab308",       deadline:null, person:null, roomBump:null },
-    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:8000,  monthly:0,    startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
+    { id:"rrsp_t26",  kind:"account",  name:"Bob RRSP '26",   target:8000,  monthly:1000, startMo:0,  color:"var(--green)",  deadline:8,    person:"Bob",   roomBump:null },
     { id:"tfsa_t",    kind:"account",  name:"Bob TFSA",        target:22000, monthly:0,    startMo:0,  color:"#34d399",       deadline:null, person:"Bob",   roomBump:null },
     { id:"tfsa_e",    kind:"account",  name:"Sally TFSA",      target:15000, monthly:0,    startMo:0,  color:"#2dd4bf",       deadline:null, person:"Sally", roomBump:null },
   ],
   // single priority list across ALL goals — top = funded first; raising a goal's
   // monthly amount eats into the surplus left for everything below it.
-  priority: ["wedding","rrsp_t26","emergency","vacation","carfund","tfsa_t","tfsa_e"],
+  priority: ["emergency","rrsp_t26","wedding","vacation","carfund","tfsa_t","tfsa_e"],
   // any kind of debt: car loan, credit card, student loan, line of credit, …
   debts: [
     { id:"debt1", name:"Honda Civic", kind:"Car loan", balance:18000, rate:0.07, payment:189, freq:"biweekly",
@@ -45,7 +46,21 @@ const GENERIC_STATE = {
     Bob:   [["Chequing",3000],["Bank Savings",8000],["TFSA",24000],["RRSP",41000]],
     Sally: [["Chequing",2500],["Savings",6000],["TFSA",16000],["RRSP (work pension)",22000]],
   },
-  fire: { target:1250000, returnPct:6, age:34, retireAge:60 },
+  fire: { target:1250000, returnPct:7.5, retireAge:60 },
+  freedom: {
+    scenarios: [
+      { id:"sc_current", name:"Current plan", color:"var(--green)", phases: [
+        { id:"ph_bob1",   person:"Bob",   label:"Bob salary",       annual:50400, startMonth:0, months:null },
+        { id:"ph_sally1", person:"Sally", label:"Sally salary",     annual:40800, startMonth:0, months:null },
+        { id:"ph_sally2", person:"Sally", label:"Sally side gig",   annual:3600,  startMonth:0, months:null },
+      ]},
+      { id:"sc_sahm", name:"Sally SAHM", color:"var(--blue)", phases: [
+        { id:"ph_bob2",   person:"Bob",   label:"Bob salary (raise)", annual:60000, startMonth:0, months:null },
+        { id:"ph_sally3", person:"Sally", label:"Sally salary",       annual:40800, startMonth:0, months:48 },
+        { id:"ph_sally4", person:"Sally", label:"Sally side gig",     annual:3600,  startMonth:0, months:48 },
+      ]},
+    ],
+  },
   mode: "custom",
 };
 // Active seed: a personal launcher's SEED_STATE wins, else the generic demo.
@@ -80,6 +95,7 @@ const LIFESTYLE = () => orderedGoals().filter(g=>g.kind==="lifestyle").map(g=>g.
 const INVEST_ORDER = () => orderedGoals().filter(g=>g.kind==="account").map(g=>g.id);
 const targetAt = (g, mi) => (+g.target||0) + (g.roomBump && mi>=(+g.roomBump.month||0) ? (+g.roomBump.amount||0) : 0);
 const sumAssets = who => (state.assets[who]||[]).reduce((a,[,v])=>a+(+v||0),0);
+const primaryAge = () => (state.ages && state.ages[state.people[0]]) || 0;
 const totalDebt = () => (state.debts||[]).reduce((a,d)=>a+(+d.balance||0),0);
 // equivalent monthly payment for a debt regardless of its payment frequency
 const debtMonthly = d => (d.freq==="biweekly" ? (+d.payment||0)*26/12 : (+d.payment||0));
@@ -154,6 +170,8 @@ function normalize(){
   });
   state.income.push(...toAdd);
   (state.expenses||[]).forEach(ex=>{ if(!ex.cat) ex.cat="fixed"; });
+  if(!state.ages || typeof state.ages!=="object") state.ages={};
+  state.people.forEach(p=>{ if(state.ages[p]==null) state.ages[p]=30; });
   // sync roomBump to null for goals whose default no longer has one
   const _dgMap=new Map(DEFAULT_STATE.goals.map(g=>[g.id,g]));
   (state.goals||[]).forEach(g=>{ const dg=_dgMap.get(g.id); if(dg&&dg.roomBump===null) g.roomBump=null; });

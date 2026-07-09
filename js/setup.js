@@ -12,17 +12,24 @@ function renderSetup(){
     const row = el("div","person-row");
     row.innerHTML = `<span class="dot" style="background:${cssVar(personColor(pi))}"></span>
       <input type="text" value="${esc(p)}" data-pi="${pi}" placeholder="Name">
+      <input type="number" class="age" step="1" min="0" value="${state.ages[p]||""}" data-pi="${pi}" placeholder="Age" title="Age now">
+      <label style="font-size:11px;color:var(--muted)">yrs old</label>
       <button class="del" data-pi="${pi}" title="Remove">×</button>`;
-    row.querySelector("input").addEventListener("change", e=>{
+    row.querySelector('input[type="text"]').addEventListener("change", e=>{
       const oldName = state.people[pi];
       const newName = e.target.value.trim() || oldName;
       if(newName === oldName) return;
       snapState();
       if(state.assets[oldName]){ state.assets[newName]=state.assets[oldName]; delete state.assets[oldName]; }
+      if(state.ages[oldName]!=null){ state.ages[newName]=state.ages[oldName]; delete state.ages[oldName]; }
       state.income.forEach(s=>{ if(s.person===oldName) s.person=newName; });
       state.goals.forEach(g=>{ if(g.person===oldName) g.person=newName; });
       state.people[pi]=newName;
       renderSetup(); applyAndRender();
+    });
+    row.querySelector(".age").addEventListener("input", e=>{
+      state.ages[state.people[pi]]=Math.round(+e.target.value||0);
+      applyAndRender();
     });
     row.querySelector(".del").addEventListener("click",()=>{
       if(state.people.length<=1){ alert("Need at least one person."); return; }
@@ -30,6 +37,7 @@ function renderSetup(){
       const name=state.people[pi];
       state.people.splice(pi,1);
       delete state.assets[name];
+      delete state.ages[name];
       renderSetup(); applyAndRender();
     });
     sec1.appendChild(row);
@@ -37,14 +45,14 @@ function renderSetup(){
   const addPBtn = el("button","addbtn"); addPBtn.textContent="+ Add person";
   addPBtn.addEventListener("click",()=>{
     snapState(); const nm="Person "+(state.people.length+1);
-    state.people.push(nm); state.assets[nm]=[];
+    state.people.push(nm); state.assets[nm]=[]; state.ages[nm]=30;
     renderSetup(); applyAndRender();
   });
   sec1.appendChild(addPBtn);
   body.appendChild(sec1);
 
   // ── INCOME ──
-  const sec2 = sec("Income sources");
+  const sec2 = sec("Income sources (after tax)");
   state.income.forEach((src,si)=>{
     const isBonus = src.monthly===0 && (src.bonuses||[]).length>0;
     const row = el("div","src-row");
@@ -121,11 +129,16 @@ function renderSetup(){
   body.appendChild(sec3);
 
   // ── GOALS ──
-  const sec4=sec("Goals (lifestyle & savings accounts)");
-  state.goals.forEach((g,gi)=>{
-    const row=el("div","goal-row");
+  // Rendered in funding-priority order (shared with the timeline's drag-to-reprioritize) —
+  // top = funded first. Drag the ⠿ grip to reorder; debts reorder in the timeline above instead.
+  const sec4=sec("Goals (lifestyle & savings accounts) — drag to reorder funding priority");
+  const goalsInOrder=orderedGoals();
+  goalsInOrder.forEach(g=>{
+    const gi=state.goals.indexOf(g);
+    const row=el("div","goal-row"); row.draggable=true; row.dataset.id=g.id;
     const resolvedColor = toHex(g.color);
     row.innerHTML=`
+      <span class="grip" title="Drag to reprioritize">⠿</span>
       <input type="text" class="nm" value="${esc(g.name)}" placeholder="Name" data-gi="${gi}" data-f="name" title="Goal name">
       <select data-gi="${gi}" data-f="kind">
         <option value="lifestyle" ${g.kind==="lifestyle"?"selected":""}>Lifestyle</option>
@@ -133,13 +146,11 @@ function renderSetup(){
       </select>
       <label style="font-size:11px;color:var(--muted)">Target:$</label>
       <input type="number" class="tgt" step="1000" min="0" value="${g.target}" data-gi="${gi}" data-f="target">
-      ${g.kind==="lifestyle"?`<label style="font-size:11px;color:var(--muted)">$/mo:</label>
-        <input type="number" class="mo" step="100" min="0" max="${Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums())}" value="${g.monthly}" data-gi="${gi}" data-f="monthly">`:""}
-      <label style="font-size:11px;color:var(--muted)">Start mo:</label>
-      <input type="number" class="mo" step="1" min="0" max="60" value="${g.startMo||0}" data-gi="${gi}" data-f="startMo">
       <label style="font-size:11px;color:var(--muted)">Deadline:</label>
       <input type="number" class="dl" step="1" min="0" max="60" value="${g.deadline!=null?g.deadline:""}" placeholder="—" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
-      ${g.kind==="account"?`<select data-gi="${gi}" data-f="person">${state.people.map(p=>`<option value="${esc(p)}" ${p===g.person?"selected":""}>${esc(p)}</option>`).join("")}</select>`:""}
+      <span class="fld-person${g.kind==="account"?"":" hidden-field"}">
+        <select data-gi="${gi}" data-f="person" tabindex="${g.kind==="account"?"0":"-1"}">${state.people.map(p=>`<option value="${esc(p)}" ${p===g.person?"selected":""}>${esc(p)}</option>`).join("")}</select>
+      </span>
       <input type="color" value="${resolvedColor}" data-gi="${gi}" data-f="color" title="Color" style="width:32px;height:28px;padding:2px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid var(--line)">
       <button class="del" data-gi="${gi}" title="Remove goal">×</button>`;
     row.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
@@ -153,8 +164,7 @@ function renderSetup(){
           if(e.target.value==="account" && !g2.person) g2.person=state.people[0];
           renderSetup(); applyAndRender(); return;   // all goals already live in state.priority
         }
-        else if(f==="monthly"){ const max=Math.max(0,baseIncome()-totalExpenses()-totalDebtMinimums()); g2.monthly=Math.min(+e.target.value||0,max); e.target.value=g2.monthly; }
-        else if(f==="target"||f==="startMo") g2[f]=Math.round(+e.target.value||0);
+        else if(f==="target") g2[f]=Math.round(+e.target.value||0);
         else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
         else if(f==="color") g2.color=e.target.value;
         else if(f==="person") g2.person=e.target.value;
@@ -168,6 +178,15 @@ function renderSetup(){
       state.priority=(state.priority||[]).filter(x=>x!==id);
       renderSetup(); applyAndRender();
     });
+    row.addEventListener("dragstart",e=>{ _dragGoalId=g.id; e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",g.id);}catch(_){} row.classList.add("dragging"); });
+    row.addEventListener("dragend",()=>{ row.classList.remove("dragging"); sec4.querySelectorAll(".goal-row").forEach(r=>r.classList.remove("drop-above","drop-below")); _dragGoalId=null; });
+    row.addEventListener("dragover",e=>{ if(!_dragGoalId||_dragGoalId===g.id) return; e.preventDefault(); e.dataTransfer.dropEffect="move";
+      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2;
+      row.classList.toggle("drop-below",below); row.classList.toggle("drop-above",!below); });
+    row.addEventListener("dragleave",()=>row.classList.remove("drop-above","drop-below"));
+    row.addEventListener("drop",e=>{ if(!_dragGoalId) return; e.preventDefault();
+      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2; const dragId=_dragGoalId;
+      row.classList.remove("drop-above","drop-below"); reprioritize(dragId, g.id, below); });
     sec4.appendChild(row);
   });
   const addG=el("button","addbtn"); addG.textContent="+ Add goal";
@@ -183,32 +202,6 @@ function renderSetup(){
   sec4.appendChild(addG);
   body.appendChild(sec4);
 
-  // ── FUNDING PRIORITY (drag to reorder; goals AND debts) ──
-  const sec5=sec("Funding priority — drag to reorder");
-  const foNote=el("div",""); foNote.style="font-size:11.5px;color:var(--muted);margin-bottom:8px";
-  foNote.innerHTML="Top = funded first. Each month's surplus flows down this list: lifestyle goals take their monthly $, accounts &amp; debts absorb the rest. Drag a <b>debt</b> up to pay it off aggressively.";
-  sec5.appendChild(foNote);
-  orderedItems().forEach((it,pi,arr)=>{
-    const o=it.obj, isDebt=it.type==="debt";
-    const color=isDebt?"var(--faint)":o.color;
-    const row=el("div","prio-row"); row.draggable=true; row.dataset.id=it.id;
-    row.innerHTML=`<span class="grip">⠿</span><span class="dot" style="background:${cssVar(color)}"></span>
-      <span class="prio-name">${esc(o.name)}</span>
-      <span class="prio-kind">${isDebt?"debt":(o.kind==="account"?"account":"goal")}</span>
-      ${pi>0?`<button class="fo-btn" data-dir="up" title="Move up">↑</button>`:""}
-      ${pi<arr.length-1?`<button class="fo-btn" data-dir="down" title="Move down">↓</button>`:""}`;
-    row.addEventListener("dragstart",e=>{ _dragGoalId=it.id; e.dataTransfer.effectAllowed="move"; try{e.dataTransfer.setData("text/plain",it.id);}catch(_){} row.classList.add("dragging"); });
-    row.addEventListener("dragend",()=>{ row.classList.remove("dragging"); sec5.querySelectorAll(".prio-row").forEach(r=>r.classList.remove("drop-above","drop-below")); _dragGoalId=null; });
-    row.addEventListener("dragover",e=>{ if(!_dragGoalId||_dragGoalId===it.id) return; e.preventDefault(); e.dataTransfer.dropEffect="move";
-      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2;
-      row.classList.toggle("drop-below",below); row.classList.toggle("drop-above",!below); });
-    row.addEventListener("dragleave",()=>row.classList.remove("drop-above","drop-below"));
-    row.addEventListener("drop",e=>{ if(!_dragGoalId) return; e.preventDefault();
-      const rect=row.getBoundingClientRect(); const below=(e.clientY-rect.top)>rect.height/2; const dragId=_dragGoalId;
-      row.classList.remove("drop-above","drop-below"); reprioritize(dragId, it.id, below); });
-    row.querySelectorAll(".fo-btn").forEach(b=>b.addEventListener("click",e=>movePriority(it.id, e.target.dataset.dir)));
-    sec5.appendChild(row);
-  });
   // ── DEBTS (any kind: car loan, credit card, …) ──
   const sec6=sec("Debts");
   (state.debts||[]).forEach((d,di)=>{
@@ -256,7 +249,6 @@ function renderSetup(){
   });
   sec6.appendChild(addD);
   body.appendChild(sec6);
-  body.appendChild(sec5);
 
   // ── ASSETS ──
   const sec7=sec("Assets");
