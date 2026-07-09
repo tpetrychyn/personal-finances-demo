@@ -16,6 +16,11 @@ const ffPersonColor = name => {
 };
 const ffDate = m => new Date(START.y, START.m + Math.round(m), 1).toLocaleString("en-US",{month:"short",year:"numeric"});
 const ffMoLbl = m => (m>=18 ? (m/12).toFixed(m%12===0?0:1)+" yr" : Math.round(m)+" mo");
+// month offset (0 = the START month) ⇄ an <input type="month"> value ("YYYY-MM")
+const ffMonthInputValue = off => { const d=new Date(START.y, START.m+Math.round(off), 1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); };
+const ffOffsetFromMonthInput = v => { const m=/^(\d{4})-(\d{2})$/.exec(v||""); if(!m) return 0;
+  return Math.max(0, (+m[1]-START.y)*12 + (+m[2]-1) - START.m); };
 
 //============ MODEL ============
 // state.freedom = { horizonYears, scenarios:[{id,name,color,phases:[{id,person,label,annual,startMonth,months}]}] }
@@ -50,6 +55,13 @@ function ensureFreedom(){
 }
 const ffScenario = id => (state.freedom.scenarios||[]).find(s=>s.id===id);
 const ffPhase = (sc,id) => (sc.phases||[]).find(p=>p.id===id);
+// the projection window in months — everything (phase ends, date pickers) is bounded by this.
+// A phase whose `until` reaches the horizon end is stored as months=null ("runs to the end").
+function ffHorizonMonths(){
+  const age=state.fire.age||0, retAge=state.fire.retireAge||65;
+  const retMonth=Math.round(Math.max(1,retAge-age)*12);
+  return Math.max(retMonth+12, Math.round((state.freedom.horizonYears||40)*12));
+}
 
 //============ PROJECTION ============
 // Track invested assets and debt balances SEPARATELY (unlike the headline card), so a debt
@@ -69,7 +81,7 @@ function ffProject(sc){
   const age = state.fire.age||0, retAge = state.fire.retireAge||65;
   const yearsToRet = Math.max(1, retAge-age);
   const retMonth = Math.round(yearsToRet*12);
-  const horizon = Math.max(retMonth+12, Math.round((state.freedom.horizonYears||40)*12));
+  const horizon = ffHorizonMonths();
   const expenses = totalExpenses();
 
   // Lifestyle goals = planned spending. Their active window is income-independent: each runs
@@ -177,19 +189,37 @@ function renderFreedom(){
   renderFreedomOutput();
 }
 
+// One phase reads like a sentence: "‹label› $‹amount›/yr  from ‹month› until ‹month›/ongoing".
+// Start/end are real Month-Year pickers; the model still stores startMonth + months (duration),
+// so the projection and drag are unchanged — the pickers just convert to/from month offsets.
 function ffPhaseRow(sc, p, person){
   const row = el("div","phase-row"); row.dataset.ph = p.id;
-  const ongoing = (p.months==null || p.months==="");
+  const H = ffHorizonMonths();
+  const startOff = Math.min(+p.startMonth||0, H-1);
+  const runsToEnd = (p.months==null || p.months==="");     // no explicit end → runs to the horizon
+  const untilOff = runsToEnd ? H : Math.min(H, startOff + Math.max(1,+p.months||0));
   row.innerHTML = `
     <span class="dot" style="background:${cssVar(ffPersonColor(person||p.person))}"></span>
     <input class="ph-label" type="text" value="${esc(p.label||"")}" placeholder="e.g. New job, Mat leave">
     <span class="paren">$</span><input class="ph-annual" type="number" step="1000" min="0" value="${+p.annual||0}" title="Gross $/year">
     <span class="paren">/yr</span><span class="hint ff-mohint">= ${fmt((+p.annual||0)/12)}/mo</span>
-    <label class="paren">from</label><input class="ph-start" type="number" step="1" min="0" value="${+p.startMonth||0}">
-    <span class="hint ff-startlbl">${ffDate(+p.startMonth||0)}</span>
-    <label class="paren">for</label><input class="ph-months" type="number" step="1" min="0" placeholder="∞" value="${ongoing?"":(+p.months||0)}" title="Duration in months (blank = ongoing)">
-    <span class="hint ff-endlbl">${ffPhaseEndLbl(p)}</span>
+    <label class="paren">from</label><input class="ph-from" type="month" min="${ffMonthInputValue(0)}" max="${ffMonthInputValue(H-1)}" value="${ffMonthInputValue(startOff)}">
+    <label class="paren">until</label><input class="ph-until" type="month" min="${ffMonthInputValue(startOff+1)}" max="${ffMonthInputValue(H)}" value="${ffMonthInputValue(untilOff)}">
+    <span class="hint ff-durlbl">${ffDurLbl(p)}</span>
     <button class="del" title="Remove phase">×</button>`;
+
+  const durEl = row.querySelector(".ff-durlbl");
+  const fromEl = row.querySelector(".ph-from");
+  const untilEl = row.querySelector(".ph-until");
+  const syncFromUntil = ()=>{                               // recompute duration from the two dates
+    const s = Math.min(ffOffsetFromMonthInput(fromEl.value), H-1);
+    let u = ffOffsetFromMonthInput(untilEl.value);
+    u = Math.max(s+1, Math.min(H, u));                      // end after start, capped at the horizon
+    p.startMonth = s;
+    p.months = (u>=H) ? null : (u-s);                       // reaching the horizon end = runs to the end
+    untilEl.min = ffMonthInputValue(s+1);
+    durEl.textContent = ffDurLbl(p);
+  };
 
   row.querySelector(".ph-label").addEventListener("input", e=>{ p.label=e.target.value; renderFreedomOutput(); });
   row.querySelector(".ph-annual").addEventListener("input", e=>{
@@ -197,17 +227,8 @@ function ffPhaseRow(sc, p, person){
     row.querySelector(".ff-mohint").textContent = "= "+fmt(p.annual/12)+"/mo";
     renderFreedomOutput();
   });
-  row.querySelector(".ph-start").addEventListener("input", e=>{
-    p.startMonth=Math.max(0,Math.round(+e.target.value||0));
-    row.querySelector(".ff-startlbl").textContent = ffDate(p.startMonth);
-    row.querySelector(".ff-endlbl").textContent = ffPhaseEndLbl(p);
-    renderFreedomOutput();
-  });
-  row.querySelector(".ph-months").addEventListener("input", e=>{
-    p.months = e.target.value==="" ? null : Math.max(0,Math.round(+e.target.value||0));
-    row.querySelector(".ff-endlbl").textContent = ffPhaseEndLbl(p);
-    renderFreedomOutput();
-  });
+  fromEl.addEventListener("change", ()=>{ syncFromUntil(); renderFreedomOutput(); });
+  untilEl.addEventListener("change", ()=>{ syncFromUntil(); renderFreedomOutput(); });
   row.querySelector(".del").addEventListener("click", ()=>{
     snapState();
     sc.phases = sc.phases.filter(x=>x.id!==p.id);
@@ -215,10 +236,9 @@ function ffPhaseRow(sc, p, person){
   });
   return row;
 }
-function ffPhaseEndLbl(p){
-  if(p.months==null || p.months==="") return "→ ongoing";
-  const end = (+p.startMonth||0) + (+p.months||0);
-  return "→ "+ffDate(end)+" ("+ffMoLbl(+p.months||0)+")";
+function ffDurLbl(p){
+  if(p.months==null || p.months==="") return "· to horizon";
+  return "· "+ffMoLbl(+p.months||0);
 }
 
 //============ RENDER (chart · timelines · outcomes — no editor rebuild, so inputs keep focus) ============

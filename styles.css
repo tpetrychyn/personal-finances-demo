@@ -272,7 +272,7 @@
   .phase-row input:focus,.phase-row select:focus{outline:none;border-color:var(--blue)}
   .phase-row .ph-label{width:150px}
   .phase-row .ph-annual{width:82px}
-  .phase-row .ph-start,.phase-row .ph-months{width:52px}
+  .phase-row .ph-from,.phase-row .ph-until{width:118px;color-scheme:dark}
   .phase-row .paren{color:var(--muted);font-size:11px}
   .phase-row .hint{color:var(--faint);font-size:10.5px;white-space:nowrap}
   .phase-row .del{margin-left:auto}
