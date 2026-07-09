@@ -272,9 +272,11 @@
   .phase-row input:focus,.phase-row select:focus{outline:none;border-color:var(--blue)}
   .phase-row .ph-label{width:150px}
   .phase-row .ph-annual{width:82px}
-  .phase-row .ph-from,.phase-row .ph-until{width:118px;color-scheme:dark}
+  .phase-row .ph-from,.phase-row .ph-until{width:138px;color-scheme:dark}   /* fits "December 2025" */
   .phase-row .paren{color:var(--muted);font-size:11px}
   .phase-row .hint{color:var(--faint);font-size:10.5px;white-space:nowrap}
+  .phase-row .ff-mohint{display:inline-block;width:98px}   /* fixed so 'from' lines up across rows */
+  .phase-row .ff-durlbl{display:inline-block;min-width:52px}
   .phase-row .del{margin-left:auto}
   .ff-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr 1.1fr;align-items:center;gap:10px;
     padding:8px 4px;border-top:1px solid #1c2029;font-size:13px;font-variant-numeric:tabular-nums}
