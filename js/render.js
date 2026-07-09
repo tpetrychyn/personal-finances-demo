@@ -20,5 +20,6 @@ function applyAndRender(){
   renderAssets();
   renderInputs();
   renderFireImpact();
+  renderFreedom();
 }
 

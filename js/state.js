@@ -1,5 +1,10 @@
 //============ DEFAULT STATE & STATE ============
-const DEFAULT_STATE = {
+// The generic public demo seed. A personal launcher (e.g. index-taylor.html) can
+// override it by defining `SEED_STATE` / `SEED_KEY` globals BEFORE this file loads —
+// see js/seed-taylor.js. That keeps real numbers hardcoded (survive a cache clear)
+// and resettable (Reset clears localStorage → reloads → falls back to the seed),
+// without maintaining a second copy of the app.
+const GENERIC_STATE = {
   meta: { asOf: "June 2026", startYear: 2026, startMonth: 6, viewMonths: 24, setupOpen: false },
   people: ["Bob", "Sally"],
   income: [
@@ -43,6 +48,8 @@ const DEFAULT_STATE = {
   fire: { target:1250000, returnPct:6, age:34, retireAge:60 },
   mode: "custom",
 };
+// Active seed: a personal launcher's SEED_STATE wins, else the generic demo.
+const DEFAULT_STATE = (typeof SEED_STATE !== "undefined" && SEED_STATE) ? SEED_STATE : GENERIC_STATE;
 let state = structuredClone(DEFAULT_STATE);
 // collision-free id generator (counter guarantees uniqueness even on same-ms rapid adds)
 let _uid = 0;
@@ -95,12 +102,12 @@ function undoGoals(){
   if(!undoStack.length) return;
   state = undoStack.pop(); updateUndoBtn();
   syncNWInputs();
-  renderSetup(); renderInputs(); renderAll(); renderNW(); renderDebts(); renderAssets(); renderFireImpact();
+  renderSetup(); renderInputs(); renderAll(); renderNW(); renderDebts(); renderAssets(); renderFireImpact(); renderFreedom();
 }
 function updateUndoBtn(){ const b=document.getElementById("undoBtn"); if(b) b.disabled=undoStack.length===0; }
 
 //============ PERSISTENCE ============
-const STORAGE_KEY = "finplan_demo_v2";
+const STORAGE_KEY = (typeof SEED_KEY !== "undefined" && SEED_KEY) ? SEED_KEY : "finplan_demo_v2";
 function persist(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 }

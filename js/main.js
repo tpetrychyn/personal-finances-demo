@@ -63,8 +63,29 @@ syncNWInputs();
 ["nwReturn","nwAge","nwRetAge","nwFire"].forEach(id=>document.getElementById(id).addEventListener("input",e=>{
   const map={nwReturn:"returnPct",nwAge:"age",nwRetAge:"retireAge",nwFire:"target"};
   state.fire[map[id]]=Math.round(+e.target.value||0);
-  renderNW(); renderFireImpact();
+  renderNW(); renderFireImpact(); renderFreedomOutput();
 }));
+
+// ── Freedom explorer controls ──
+ensureFreedom();
+const fhInput=document.getElementById("freedomHorizon");
+if(fhInput){
+  fhInput.value=state.freedom.horizonYears;
+  fhInput.addEventListener("input",e=>{
+    state.freedom.horizonYears=Math.max(5,Math.round(+e.target.value||0));
+    renderFreedomOutput();
+  });
+}
+const addScBtn=document.getElementById("addScenarioBtn");
+if(addScBtn) addScBtn.addEventListener("click",()=>{
+  snapState();
+  const f=state.freedom;
+  const sc=ffCurrentPlanScenario();
+  sc.name="Scenario "+(f.scenarios.length+1);
+  sc.color=FF_SC_COLORS[f.scenarios.length % FF_SC_COLORS.length];
+  f.scenarios.push(sc);
+  renderFreedom();
+});
 
 document.querySelectorAll(".btn[data-mode]").forEach(b=>b.classList.toggle("active", b.dataset.mode===state.mode));
 document.querySelectorAll(".btn[data-mode]").forEach(b=>{
@@ -102,3 +123,4 @@ renderDebts();
 renderAssets();
 renderNW();
 renderFireImpact();
+renderFreedom();

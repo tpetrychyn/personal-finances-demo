@@ -1,175 +1,18 @@
 <!--
   Personal Finance Planner — single offline app, no build step, no frameworks.
-  This file is markup only. Logic is split into small classic (non-module) scripts
-  under js/ that share ONE global scope; styling is in styles.css.
-    state -> util -> simulate -> header -> sankey -> gantt -> debts -> projection -> render -> setup -> main
-  Load order matters only in that js/main.js runs the init and must load LAST.
+  This file is a THIN LAUNCHER: it pulls in the stylesheet and the js/ modules, which
+  share ONE global scope and hold ALL logic AND markup (js/layout.js builds the page).
+    layout -> state -> util -> simulate -> header -> sankey -> gantt -> debts -> projection -> freedom -> render -> setup -> main
+  Load order matters: layout.js runs FIRST (builds the DOM), main.js runs LAST (init).
+  To run a personal plan with your own numbers, copy this file, add a
+  <script src="js/seed-taylor.js"></script> line BEFORE js/state.js, and the seed's
+  SEED_STATE/SEED_KEY override the generic demo. See README -> "Personal seed".
   Classic <script src>/<link> load over file:// AND GitHub Pages, so no bundler is needed.
-  See README.md -> "File layout" for what lives in each file.
 -->
-<title>Household Cashflow & Funding Plan</title>
+<title>Household Cashflow &amp; Funding Plan</title>
 <link rel="stylesheet" href="styles.css">
-
-<div class="wrap">
-  <header>
-    <h1>Household Cashflow &amp; Funding Plan</h1>
-    <p class="sub">Bob &amp; Sally · monthly basis · as of June 2026</p>
-  </header>
-
-  <!-- Setup card inserted before stats -->
-  <div class="setup-card" id="setupCard">
-    <button class="setup-toggle" id="setupToggle">
-      <span>⚙ Setup / Edit inputs</span>
-      <span id="setupChevron">▾</span>
-    </button>
-    <div class="setup-body" id="setupBody" style="display:none">
-      <!-- populated by renderSetup() -->
-    </div>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><div class="k">Monthly income</div><div class="v" id="statIncome">—</div></div>
-    <div class="stat"><div class="k">Expenses</div><div class="v" id="statExpenses">—</div></div>
-    <div class="stat"><div class="k">Free to deploy / mo</div><div class="v" id="statFree" style="color:var(--green)">—</div></div>
-    <div class="stat"><div class="k">FIRE target</div><div class="v sm" id="statFireTarget">—</div></div>
-    <div class="stat"><div class="k">Yrs to FIRE*</div><div class="v sm" id="fireYears">—</div></div>
-  </div>
-
-  <!-- SANKEY card -->
-  <div class="card">
-    <div class="cardhead">
-      <div><h2>Where the money goes</h2>
-      <p class="sub">Income → expenses, debt payoff, and savings. Use ‹ › to browse months.</p></div>
-      <div class="sankey-nav">
-        <button id="sankeyPrev">‹</button>
-        <span class="mo-lbl" id="sankeyMonthLbl">—</span>
-        <button id="sankeyNext">›</button>
-      </div>
-    </div>
-    <div class="budget-widget" id="budgetWidget"></div>
-    <div class="sankey"><svg id="sankey" viewBox="0 0 1300 780" preserveAspectRatio="xMidYMid meet"></svg></div>
-    <div class="note" id="sankeyNote"></div>
-  </div>
-
-  <!-- GANTT card -->
-  <div class="card">
-    <div class="cardhead">
-      <div><h2>Funding goals &amp; timelines</h2>
-      <p class="sub">Every goal <b>and debt</b> shares one priority list — top = funded first. <b>Drag the ⠿ grip to reprioritize</b> (drag a debt up to pay it off aggressively). In <b>Custom</b> mode, <b>drag a bar to move/pace it</b>: goals move (start month) and resize ($/mo); debts resize to set payoff speed. Accounts fill from whatever's left unless you cap them.</p></div>
-    </div>
-
-    <div class="controls">
-      <div>
-        <div class="ctl-lbl">Strategy</div>
-        <div class="presets">
-          <button class="btn" data-mode="parallel">Parallel</button>
-          <button class="btn" data-mode="waterfall">Waterfall</button>
-          <button class="btn active" data-mode="custom">Custom (phased)</button>
-        </div>
-        <button id="undoBtn" class="reset" title="Undo last goal change (⌘/Ctrl+Z)" disabled>↩ Undo</button>
-        <button id="resetBtn" class="reset" title="Clear saved settings and reload">↺ Reset to defaults</button>
-        <span class="savehint">· changes auto-save to this browser</span>
-      </div>
-      <div style="flex:1;min-width:280px">
-        <div class="ctl-lbl" id="inputsLabel">Monthly $ &amp; start month per lifestyle goal · accounts absorb the rest</div>
-        <div class="inputs" id="inputs"></div>
-      </div>
-    </div>
-
-    <div class="gantt">
-      <div class="axis">
-        <div></div>
-        <div class="months" id="axis"></div>
-        <div></div>
-      </div>
-      <div class="grow">
-        <div class="gridlines" id="gridlines"></div>
-        <div id="rows"></div>
-      </div>
-    </div>
-    <div id="barTip" class="bartip"></div>
-
-    <div class="legend2" id="ganttLegend"></div>
-    <div class="note">
-      <b>Accounts are per person.</b> Leftover cash each month cascades into your savings/registered accounts in this order: <b id="cascadeOrderText">—</b>. Reorder it under <b>Setup → Funding cascade order</b>. A goal can carry a <b>deadline</b> (e.g. an RRSP tax-year cutoff) — shown as a vertical line — and a one-time <b>room bump</b> (new contribution room unlocking on a set month). Vertical lines mark deadlines.<br><br>
-      <b>Three strategies:</b> <b>Parallel</b> — lifestyle goals take fixed monthly slices, accounts absorb the rest. <b>Waterfall</b> — one goal at a time in priority order. <b>Custom (phased, shown)</b> — set each lifestyle goal's monthly $ <i>and</i> a start month (e.g. RRSP + wedding now, vacation/furniture deferred); the accounts soak up whatever's left. Bulk car dumps (car card) come off that month's surplus — except ones flagged "existing cash" like Sally's $4k, which don't.<br><br>
-      The <b>~$5k RRSP refund</b> arriving spring 2027 isn't modeled in the bars; routing it to the car loan or a TFSA pulls finish lines in. *FIRE estimate ignores investment growth — purely savings ÷ target, so the real timeline is faster.
-    </div>
-  </div>
-
-  <!-- DEBTS card -->
-  <div class="card">
-    <div class="cardhead">
-      <div><h2 id="debtCardTitle">Debts</h2>
-      <p class="sub">Any debt — car loan, credit card, student loan, line of credit — costs money. Paying it down is a <b>guaranteed, risk-free return</b> at the debt's interest rate, often beating (and safer than) investing. Schedule lump-sum payoffs below to see the interest saved. Add or edit debts in <b>Setup → Debts</b>.</p></div>
-    </div>
-
-    <div id="debtBlocks"></div>
-
-    <div class="note">
-      <b>Decision rule:</b> a dollar against a debt earns a <b>guaranteed</b> return equal to its rate; the same dollar invested earns ~6% <i>and isn't guaranteed</i>. So high-rate debt (credit cards especially) is usually your best-value dollar — arguably ahead of topping up a TFSA. <b>Opportune times</b> to dump: whenever a goal finishes and frees cash, or any windfall — there's no penalty for early payoff, and every month carried keeps costing the rate. Surplus-funded dumps are wired into the goal timeline above, so you can see what each one costs your investing pace that month.
-    </div>
-  </div>
-
-  <!-- NET WORTH & FIRE card -->
-  <div class="card">
-    <div class="cardhead">
-      <div><h2>Net worth &amp; FIRE projection</h2>
-      <p class="sub">Today's holdings compounded forward, plus what you keep investing — with Full FIRE and Coast FIRE milestones.</p></div>
-    </div>
-
-    <div class="assets" id="assetsBox"></div>
-
-    <div class="controls" style="margin-top:18px">
-      <div>
-        <div class="ctl-lbl">Assumptions (edit freely)</div>
-        <div class="inputs">
-          <div class="inp"><label>Return %/yr (nominal)</label><input id="nwReturn" type="number" step="0.5" value="6"></div>
-          <div class="inp"><label id="nwAgeLabel">Age now</label><input id="nwAge" type="number" step="1" value="34"></div>
-          <div class="inp"><label>Coast retire age</label><input id="nwRetAge" type="number" step="1" value="60"></div>
-          <div class="inp"><label>FIRE target</label><input id="nwFire" type="number" step="10000" value="1250000"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stats" id="nwStats"></div>
-
-    <svg id="nwChart" viewBox="0 0 920 320" preserveAspectRatio="xMidYMid meet" style="margin-top:8px"></svg>
-    <div class="legend2" id="nwLegend"></div>
-
-    <div class="note">
-      <b>Coast FIRE</b> = the point where your invested assets are big enough that, <i>even if you never contribute another dollar</i>, normal market growth carries them to your FIRE number by your retirement age. Once you cross it, work/saving becomes optional — you're just "coasting." <b>Full FIRE</b> = the portfolio actually reaching your target (here $1.25M, ~4% withdrawal ≈ $50k/yr). After Full FIRE the line models a 4%/yr drawdown, so it roughly plateaus.<br><br>
-      <b>Assumptions to sanity-check:</b> one blended <b>nominal</b> return across all accounts (cash included — lower its drag by adjusting the rate); Bob's age is a guess — set it and the retire age for an accurate Coast number. Contributions follow the plan above (surplus minus lifestyle spending while goals are active, then the full surplus). Only the car loan is subtracted as a liability.
-    </div>
-  </div>
-
-  <!-- FIRE IMPACT card -->
-  <div class="card">
-    <div class="cardhead">
-      <div><h2>What moves your FIRE date</h2>
-      <p class="sub">How much each spending goal pushes FIRE out — and how trimming monthly expenses pulls FIRE <b>and</b> Coast FIRE forward. Driven by the same projection as the chart above (returns included, so more accurate than the headline estimate).</p></div>
-    </div>
-
-    <div class="fi-sub">Each spending goal's drag on FIRE</div>
-    <div id="goalImpactRows"></div>
-    <div class="legend2" id="goalImpactNote" style="margin-top:12px"></div>
-
-    <div class="fi-sub">Trim spending → pull FIRE forward</div>
-    <div class="exp-explorer">
-      <div class="exp-slider-row">
-        <label style="font-size:12px;color:var(--muted);white-space:nowrap">Cut from monthly spending</label>
-        <input type="range" id="expCutSlider" min="0" max="100" step="50" value="0">
-        <span id="expCutLbl" style="font-variant-numeric:tabular-nums;min-width:72px;font-weight:650;text-align:right">$0/mo</span>
-      </div>
-      <div class="exp-readout" id="expReadout"></div>
-      <svg id="expFireChart" viewBox="0 0 920 300" preserveAspectRatio="xMidYMid meet" style="margin-top:4px"></svg>
-      <div class="legend2" id="expFireLegend"></div>
-    </div>
-
-    <div class="note" id="fireImpactNote"></div>
-  </div>
-</div>
-
+<body>
+<script src="js/layout.js"></script>
 <script src="js/state.js"></script>
 <script src="js/util.js"></script>
 <script src="js/simulate.js"></script>
@@ -178,6 +21,8 @@
 <script src="js/gantt.js"></script>
 <script src="js/debts.js"></script>
 <script src="js/projection.js"></script>
+<script src="js/freedom.js"></script>
 <script src="js/render.js"></script>
 <script src="js/setup.js"></script>
 <script src="js/main.js"></script>
+</body>
