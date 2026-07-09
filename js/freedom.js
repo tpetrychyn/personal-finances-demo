@@ -237,8 +237,9 @@ function ffPhaseRow(sc, p, person){
   return row;
 }
 function ffDurLbl(p){
-  if(p.months==null || p.months==="") return "· to horizon";
-  return "· "+ffMoLbl(+p.months||0);
+  const start = +p.startMonth||0;
+  const months = (p.months==null || p.months==="") ? (ffHorizonMonths()-start) : (+p.months||0);
+  return "· "+ffMoLbl(months);   // yr for ≥18 mo, else mo
 }
 
 //============ RENDER (chart · timelines · outcomes — no editor rebuild, so inputs keep focus) ============
