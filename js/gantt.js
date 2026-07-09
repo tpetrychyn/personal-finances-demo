@@ -23,7 +23,7 @@ function renderInputs(){
         <div class="inrow">
           <input type="number" step="1" min="0" max="${maxMo}" value="${g.monthly||0}" data-key="${id}" data-f="m" title="monthly $ (max ${fmt(maxMo)} after higher-priority goals)">
           <span class="x">@</span>
-          <input class="mo" type="number" step="1" min="${actualStart??0}" max="${VIEW_MONTHS}" value="${displayMo}" data-key="${id}" data-f="s" title="start month">
+          <input class="mo" type="month" min="${monthInputValue(actualStart??0)}" max="${monthInputValue(VIEW_MONTHS)}" value="${monthInputValue(displayMo)}" data-key="${id}" data-f="s" title="start month">
           <span class="hint">${hintTxt}</span>
         </div>`;
       budgetLeft=Math.max(0,budgetLeft-(g.monthly||0));
@@ -35,12 +35,17 @@ function renderInputs(){
     box.appendChild(casc);
     box.querySelectorAll("input").forEach(inp=>{
       inp.addEventListener("focus", ()=>snapState());
-      inp.addEventListener("input",e=>{
+      inp.addEventListener(inp.dataset.f==="s" ? "change" : "input", e=>{
         const id=e.target.dataset.key, g=goalBy(id); if(!g) return;
-        const v=Math.round(+e.target.value||0);
-        if(e.target.dataset.f==="m"){ const max=+e.target.max||0; g.monthly=Math.min(v,max); e.target.value=g.monthly; }
-        else { const minMo=+e.target.min||0; g.startMo=Math.max(minMo,Math.min(v,VIEW_MONTHS)); e.target.value=g.startMo; }
-        if(e.target.dataset.f==="s") e.target.parentElement.querySelector(".hint").textContent=monthLabel(g.startMo);
+        if(e.target.dataset.f==="m"){
+          const v=Math.round(+e.target.value||0), max=+e.target.max||0;
+          g.monthly=Math.min(v,max); e.target.value=g.monthly;
+        } else {
+          const minMo=offsetFromMonthInput(e.target.min);
+          g.startMo=Math.max(minMo,Math.min(offsetFromMonthInput(e.target.value),VIEW_MONTHS));
+          e.target.value=monthInputValue(g.startMo);
+          e.target.parentElement.querySelector(".hint").textContent=monthLabel(g.startMo);
+        }
         renderAll();
       });
     });

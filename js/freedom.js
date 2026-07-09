@@ -16,11 +16,6 @@ const ffPersonColor = name => {
 };
 const ffDate = m => new Date(START.y, START.m + Math.round(m), 1).toLocaleString("en-US",{month:"short",year:"numeric"});
 const ffMoLbl = m => (m>=18 ? (m/12).toFixed(m%12===0?0:1)+" yr" : Math.round(m)+" mo");
-// month offset (0 = the START month) ⇄ an <input type="month"> value ("YYYY-MM")
-const ffMonthInputValue = off => { const d=new Date(START.y, START.m+Math.round(off), 1);
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); };
-const ffOffsetFromMonthInput = v => { const m=/^(\d{4})-(\d{2})$/.exec(v||""); if(!m) return 0;
-  return Math.max(0, (+m[1]-START.y)*12 + (+m[2]-1) - START.m); };
 
 //============ MODEL ============
 // state.freedom = { horizonYears, scenarios:[{id,name,color,phases:[{id,person,label,annual,startMonth,months}]}] }
@@ -203,8 +198,8 @@ function ffPhaseRow(sc, p, person){
     <input class="ph-label" type="text" value="${esc(p.label||"")}" placeholder="e.g. New job, Mat leave">
     <span class="paren">$</span><input class="ph-annual" type="number" step="1000" min="0" value="${+p.annual||0}" title="Gross $/year">
     <span class="paren">/yr</span><span class="hint ff-mohint">= ${fmt((+p.annual||0)/12)}/mo</span>
-    <label class="paren">from</label><input class="ph-from" type="month" min="${ffMonthInputValue(0)}" max="${ffMonthInputValue(H-1)}" value="${ffMonthInputValue(startOff)}">
-    <label class="paren">until</label><input class="ph-until" type="month" min="${ffMonthInputValue(startOff+1)}" max="${ffMonthInputValue(H)}" value="${ffMonthInputValue(untilOff)}">
+    <label class="paren">from</label><input class="ph-from" type="month" min="${monthInputValue(0)}" max="${monthInputValue(H-1)}" value="${monthInputValue(startOff)}">
+    <label class="paren">until</label><input class="ph-until" type="month" min="${monthInputValue(startOff+1)}" max="${monthInputValue(H)}" value="${monthInputValue(untilOff)}">
     <span class="hint ff-durlbl">${ffDurLbl(p)}</span>
     <button class="del" title="Remove phase">×</button>`;
 
@@ -212,12 +207,12 @@ function ffPhaseRow(sc, p, person){
   const fromEl = row.querySelector(".ph-from");
   const untilEl = row.querySelector(".ph-until");
   const syncFromUntil = ()=>{                               // recompute duration from the two dates
-    const s = Math.min(ffOffsetFromMonthInput(fromEl.value), H-1);
-    let u = ffOffsetFromMonthInput(untilEl.value);
+    const s = Math.min(offsetFromMonthInput(fromEl.value), H-1);
+    let u = offsetFromMonthInput(untilEl.value);
     u = Math.max(s+1, Math.min(H, u));                      // end after start, capped at the horizon
     p.startMonth = s;
     p.months = (u>=H) ? null : (u-s);                       // reaching the horizon end = runs to the end
-    untilEl.min = ffMonthInputValue(s+1);
+    untilEl.min = monthInputValue(s+1);
     durEl.textContent = ffDurLbl(p);
   };
 
@@ -437,5 +432,5 @@ function renderFreedomNote(){
     `adding each month's income (from the phases above) minus your ${fmt(totalExpenses())}/mo expenses, active lifestyle-goal spending, and debt payments. `+
     `When income doesn't cover the outflow, the shortfall is <b>drawn from the portfolio</b> — so a layoff or career break shows up as a dip, and if the line hits $0 the scenario <b>runs dry</b> (red ○). `+
     `Debts are paid down on schedule and stop draining cash once cleared. <b>Retire with</b> = net worth at age ${state.fire.retireAge}; <b>Coast FIRE</b> = the month savings alone would grow to ${fmt(state.fire.target)} by then with no further contributions. `+
-    `Today's dollars, one blended nominal return, taxes ignored — directional, not a guarantee.`;
+    `Today's (real) dollars, one blended real return, taxes ignored — directional, not a guarantee.`;
 }

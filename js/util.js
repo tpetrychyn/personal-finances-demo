@@ -16,6 +16,12 @@ function monthLabel(i){
   return d.toLocaleString("en-US",{month:"short"})+" '"+String(d.getFullYear()).slice(2);
 }
 const VIEW_MONTHS = 24;
+// month offset (0 = the plan's START month) ⇄ an <input type="month"> value ("YYYY-MM") —
+// shared by every month/year picker in the app (goal deadlines, gantt start months, debt dumps, freedom phases).
+const monthInputValue = off => { const d=new Date(START.y, START.m+Math.round(off), 1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); };
+const offsetFromMonthInput = v => { const m=/^(\d{4})-(\d{2})$/.exec(v||""); if(!m) return 0;
+  return Math.max(0, (+m[1]-START.y)*12 + (+m[2]-1) - START.m); };
 
 // DOM helper functions used in renderSetup
 function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }

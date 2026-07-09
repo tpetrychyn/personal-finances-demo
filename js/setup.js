@@ -146,7 +146,7 @@ function renderSetup(){
       <label style="font-size:11px;color:var(--muted)">Target:$</label>
       <input type="number" class="tgt" step="1000" min="0" value="${g.target}" data-gi="${gi}" data-f="target">
       <label style="font-size:11px;color:var(--muted)">Deadline:</label>
-      <input type="number" class="dl" step="1" min="0" max="60" value="${g.deadline!=null?g.deadline:""}" placeholder="—" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
+      <input type="month" class="dl" min="${monthInputValue(0)}" value="${g.deadline!=null?monthInputValue(g.deadline):""}" data-gi="${gi}" data-f="deadline" title="Deadline month (blank=none)">
       <input type="color" value="${resolvedColor}" data-gi="${gi}" data-f="color" title="Color" style="width:32px;height:28px;padding:2px;border-radius:4px;cursor:pointer;background:transparent;border:1px solid var(--line)">
       <button class="del" data-gi="${gi}" title="Remove goal">×</button>`;
     row.querySelectorAll("input[data-f],select[data-f]").forEach(inp=>{
@@ -157,7 +157,7 @@ function renderSetup(){
         if(f==="name") g2.name=e.target.value;
         else if(f==="kind"){ g2.kind=e.target.value; renderSetup(); applyAndRender(); return; }
         else if(f==="target") g2[f]=Math.round(+e.target.value||0);
-        else if(f==="deadline") g2.deadline=e.target.value===""?null:(+e.target.value||0);
+        else if(f==="deadline") g2.deadline=e.target.value===""?null:offsetFromMonthInput(e.target.value);
         else if(f==="color") g2.color=e.target.value;
         applyAndRender();
       });

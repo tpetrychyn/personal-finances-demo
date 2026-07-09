@@ -67,7 +67,7 @@
   .inp em{color:var(--green);font-style:normal;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
   .inrow{display:flex;align-items:center;gap:5px}
   .inrow input{width:74px}
-  .inrow input.mo{width:52px}
+  .inrow input.mo{width:155px;color-scheme:dark}
   .inrow .x{color:var(--faint);font-size:12px}
   .inrow .hint{color:var(--faint);font-size:10.5px;white-space:nowrap;min-width:48px}
   select{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;
@@ -78,7 +78,7 @@
   .dumprow{display:flex;align-items:center;gap:7px;font-size:13px}
   .dumprow input{background:#10131a;border:1px solid var(--line);color:var(--txt);
     border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
-  .dumprow .amt{width:96px}.dumprow .mo{width:58px}
+  .dumprow .amt{width:96px}.dumprow .mo{width:155px;color-scheme:dark}
   .dumprow .hint{color:var(--faint);font-size:11px;min-width:64px}
   .dumprow .cashtog{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer}
   .dumprow .cashtog input{width:auto}
@@ -176,7 +176,7 @@
   .goal-row input{background:#10131a;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:5px 7px;font:inherit;font-size:12px}
   .goal-row input.nm{width:130px}
   .goal-row input.tgt{width:74px}
-  .goal-row input.dl{width:46px}
+  .goal-row input.dl{width:155px;color-scheme:dark}
   .goal-row select{font-size:12px;padding:5px 7px}
   .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
   .del:hover{color:var(--red)}
@@ -268,7 +268,7 @@
   .phase-row input:focus,.phase-row select:focus{outline:none;border-color:var(--blue)}
   .phase-row .ph-label{width:150px}
   .phase-row .ph-annual{width:82px}
-  .phase-row .ph-from,.phase-row .ph-until{width:138px;color-scheme:dark}   /* fits "December 2025" */
+  .phase-row .ph-from,.phase-row .ph-until{width:155px;color-scheme:dark}   /* fits "September 2026" */
   .phase-row .paren{color:var(--muted);font-size:11px}
   .phase-row .hint{color:var(--faint);font-size:10.5px;white-space:nowrap}
   .phase-row .ff-mohint{display:inline-block;width:98px}   /* fixed so 'from' lines up across rows */

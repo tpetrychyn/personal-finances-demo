@@ -94,8 +94,8 @@ function renderDumpRows(box, di){
   (state.debts[di].dumps||[]).forEach((d,i)=>{
     const row=document.createElement("div"); row.className="dumprow";
     row.innerHTML=`$<input class="amt" type="number" step="500" min="0" value="${d.amount}" data-i="${i}" data-f="amount">
-      <span class="x">in month</span>
-      <input class="mo" type="number" step="1" min="0" max="120" value="${d.month}" data-i="${i}" data-f="month">
+      <span class="x">in</span>
+      <input class="mo" type="month" min="${monthInputValue(0)}" value="${monthInputValue(d.month)}" data-i="${i}" data-f="month">
       <span class="hint">${carDt(d.month)}</span>
       <label class="cashtog" title="Paid from existing cash — doesn't reduce your monthly investing surplus">
         <input type="checkbox" data-i="${i}" data-f="fromSavings" ${d.fromSavings?"checked":""}> existing cash</label>
@@ -104,8 +104,13 @@ function renderDumpRows(box, di){
   });
   box.querySelectorAll("input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
     state.debts[di].dumps[+e.target.dataset.i][e.target.dataset.f]=Math.round(+e.target.value||0);
-    if(e.target.dataset.f==="month") e.target.parentElement.querySelector(".hint").textContent=carDt(+e.target.value||0);
     refreshDebt(di); renderAll();   // light refresh keeps input focus; gantt+sankey reflect dumps
+  }));
+  box.querySelectorAll("input[type=month]").forEach(inp=>inp.addEventListener("change",e=>{
+    const i=+e.target.dataset.i, month=offsetFromMonthInput(e.target.value);
+    state.debts[di].dumps[i].month=month;
+    e.target.parentElement.querySelector(".hint").textContent=carDt(month);
+    refreshDebt(di); renderAll();
   }));
   box.querySelectorAll("input[type=checkbox]").forEach(inp=>inp.addEventListener("change",e=>{
     state.debts[di].dumps[+e.target.dataset.i].fromSavings=e.target.checked; refreshDebt(di); renderAll();
