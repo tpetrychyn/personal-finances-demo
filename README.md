@@ -45,6 +45,13 @@ Vanilla everything — no frameworks, no build step, no external requests, no bu
 (just open the file) **and** on GitHub Pages, with no build step either way. State
 auto-saves to `localStorage`.
 
+Every `<link>`/`<script>` tag in `index.html` (and `index-taylor.html`) carries a
+`?v=N` query string for cache-busting — bump `N` (find/replace across the file)
+whenever you push a change to `styles.css` or any `js/*.js` file, so returning
+browsers fetch the new version instead of a cached one. GitHub Pages' own build
+lag is separate from this — right after a push, give the Pages build a minute
+before checking, then hard-refresh.
+
 ### File layout
 
 | File | What lives there |
