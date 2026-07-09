@@ -6,8 +6,17 @@ const fs = require("fs");
 const path = require("path");
 const { JSDOM } = require("jsdom");
 
-const htmlPath = path.join(__dirname, "..", "index.html");
-const html = fs.readFileSync(htmlPath, "utf8");
+const root = path.join(__dirname, "..");
+const htmlPath = path.join(root, "index.html");
+// The app is split into an external stylesheet + classic <script src> modules (loads over
+// file:// and GitHub Pages, shares one global scope). jsdom here isn't given resources:"usable",
+// so we inline those files back into the HTML — the combined document is byte-equivalent to the
+// old single-file index.html, keeping these tests synchronous while exercising the real shipped code.
+const html = fs.readFileSync(htmlPath, "utf8")
+  .replace(/<link\s+rel="stylesheet"\s+href="([^"]+)"\s*\/?>/g,
+    (_, href) => "<style>\n" + fs.readFileSync(path.join(root, href), "utf8") + "\n</style>")
+  .replace(/<script\s+src="([^"]+)"><\/script>/g,
+    (_, src) => "<script>\n" + fs.readFileSync(path.join(root, src), "utf8") + "\n</script>");
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = "") => { (cond ? pass++ : fail++); console.log((cond ? "✅" : "❌") + " " + name + (extra ? "  (" + extra + ")" : "")); };
